@@ -1,0 +1,106 @@
+// EmailAccount Service - gRPC API
+// OAuth email account for sending via Gmail, Microsoft, or SendGrid
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// EmailAccount Service
+// =============================================================================
+
+service EmailAccountService {
+  // CRUD operations
+  rpc CreateEmailAccount(CreateEmailAccountRequest) returns (EmailAccount);
+  rpc GetEmailAccount(GetEmailAccountRequest) returns (EmailAccount);
+  rpc UpdateEmailAccount(UpdateEmailAccountRequest) returns (EmailAccount);
+  rpc DeleteEmailAccount(DeleteEmailAccountRequest) returns (DeleteEmailAccountResponse);
+
+  // List operations
+  rpc ListEmailAccounts(ListEmailAccountsRequest) returns (ListEmailAccountsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create EmailAccount
+message CreateEmailAccountRequest {
+  string user_id = 1;  // Auth user reference
+  string provider = 2;
+  string email_address = 3;
+  optional string access_token = 4;  // Encrypted OAuth access token
+  optional string refresh_token = 5;  // Encrypted OAuth refresh token
+  optional google.protobuf.Timestamp token_expires_at = 6;
+  optional string watch_history_id = 7;  // Gmail push notification history ID
+  bool is_active = 8;
+}
+
+// Get EmailAccount
+message GetEmailAccountRequest {
+  string id = 1;  // UUID of the emailaccount
+}
+
+// Update EmailAccount
+message UpdateEmailAccountRequest {
+  string id = 1;  // UUID of the emailaccount
+  optional string user_id = 2;  // Auth user reference
+  optional string provider = 3;
+  optional string email_address = 4;
+  optional string access_token = 5;  // Encrypted OAuth access token
+  optional string refresh_token = 6;  // Encrypted OAuth refresh token
+  optional google.protobuf.Timestamp token_expires_at = 7;
+  optional string watch_history_id = 8;  // Gmail push notification history ID
+  optional bool is_active = 9;
+}
+
+// Delete EmailAccount
+message DeleteEmailAccountRequest {
+  string id = 1;  // UUID of the emailaccount
+}
+
+message DeleteEmailAccountResponse {
+  bool success = 1;
+}
+
+// List EmailAccounts
+message ListEmailAccountsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListEmailAccountsResponse {
+  repeated EmailAccount items = 1;  // List of emailaccounts
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message EmailAccount {
+  string id = 1;  // UUID primary key
+  string user_id = 2;  // Auth user reference
+  string provider = 3;
+  string email_address = 4;
+  optional string access_token = 5;  // Encrypted OAuth access token
+  optional string refresh_token = 6;  // Encrypted OAuth refresh token
+  optional google.protobuf.Timestamp token_expires_at = 7;
+  optional string watch_history_id = 8;  // Gmail push notification history ID
+  bool is_active = 9;
+  string tenant_id = 10;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}

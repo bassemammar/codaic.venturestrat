@@ -1,0 +1,359 @@
+# VentureStrat Application Services
+services:
+  # Registry Service
+  registry-service:
+    build:
+      context: .
+      dockerfile: ./services/registry-service/Dockerfile
+      target: development
+    container_name: venturestrat-registry-service
+    environment:
+      SERVICE_NAME: registry-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat"
+      CONSUL_HOST: venturestrat-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "venturestrat-kafka:29092"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4000,http://localhost:5178"
+    expose:
+      - "8080"
+    networks:
+      - venturestrat-network
+    depends_on:
+      venturestrat-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: ./services/auth-service/Dockerfile
+      target: development
+    container_name: venturestrat-auth-service
+    environment:
+      SERVICE_NAME: auth-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat"
+      CONSUL_HOST: venturestrat-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "venturestrat-kafka:29092"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      JWT_ALGORITHM: "HS256"
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      JWT_REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4000,http://localhost:5178"
+    ports:
+      - "8106:8000"
+    networks:
+      - venturestrat-network
+    depends_on:
+      venturestrat-postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  # Event Monitor Service
+  event-monitor:
+    build:
+      context: .
+      dockerfile: ./services/event-monitor/Dockerfile
+    container_name: venturestrat-event-monitor
+    environment:
+      SERVICE_NAME: event-monitor
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8101"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat"
+      KAFKA_BOOTSTRAP_SERVERS: "venturestrat-kafka:29092"
+      SERVICES_DIR: "/app/services"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4000,http://localhost:5178"
+    ports:
+      - "8101:8101"
+    networks:
+      - venturestrat-network
+    depends_on:
+      venturestrat-postgres:
+        condition: service_healthy
+      venturestrat-kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8101/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # Forge Requirements Service
+  forge:
+    build:
+      context: .
+      dockerfile: ./services/forge/Dockerfile
+    container_name: venturestrat-forge
+    environment:
+      SERVICE_NAME: forge
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat"
+      REDIS_URL: "redis://venturestrat-redis:6379/7"
+      AUTH_SERVICE_URL: "http://venturestrat-auth-service:8000"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      PLATFORM_NAME: "venturestrat"
+      PLATFORM_ROOT: "/app"
+      LOG_LEVEL: "INFO"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4000,http://localhost:5178"
+    ports:
+      - "8150:8000"
+    networks:
+      - venturestrat-network
+    depends_on:
+      venturestrat-postgres:
+        condition: service_healthy
+      venturestrat-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # Domain Service
+  investor-service:
+    build:
+      context: .
+      dockerfile: ./services/investor-service/Dockerfile
+      target: development
+    container_name: venturestrat-investor-service
+    environment:
+      SERVICE_NAME: investor-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8059"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat"
+      CONSUL_HOST: venturestrat-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "venturestrat-kafka:29092"
+      REDIS_URL: "redis://venturestrat-redis:6379/0"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4000,http://localhost:5178"
+    ports:
+      - "8059:8059"
+    networks:
+      - venturestrat-network
+    depends_on:
+      venturestrat-postgres:
+        condition: service_healthy
+      venturestrat-redis:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8059/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # Outreach Service
+  outreach-service:
+    build:
+      context: .
+      dockerfile: ./services/outreach-service/Dockerfile
+      target: development
+    container_name: venturestrat-outreach-service
+    environment:
+      SERVICE_NAME: outreach-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8061"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat"
+      CONSUL_HOST: venturestrat-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "venturestrat-kafka:29092"
+      REDIS_URL: "redis://venturestrat-redis:6379/1"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4000,http://localhost:5178"
+    ports:
+      - "8061:8061"
+    networks:
+      - venturestrat-network
+    depends_on:
+      venturestrat-postgres:
+        condition: service_healthy
+      venturestrat-redis:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8061/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # CRM Service
+  crm-service:
+    build:
+      context: .
+      dockerfile: ./services/crm-service/Dockerfile
+      target: development
+    container_name: venturestrat-crm-service
+    environment:
+      SERVICE_NAME: crm-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8062"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat"
+      CONSUL_HOST: venturestrat-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "venturestrat-kafka:29092"
+      REDIS_URL: "redis://venturestrat-redis:6379/2"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4000,http://localhost:5178"
+    ports:
+      - "8062:8062"
+    networks:
+      - venturestrat-network
+    depends_on:
+      venturestrat-postgres:
+        condition: service_healthy
+      venturestrat-redis:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8062/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # Legal Service
+  legal-service:
+    build:
+      context: .
+      dockerfile: ./services/legal-service/Dockerfile
+      target: development
+    container_name: venturestrat-legal-service
+    environment:
+      SERVICE_NAME: legal-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8064"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat"
+      CONSUL_HOST: venturestrat-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "venturestrat-kafka:29092"
+      REDIS_URL: "redis://venturestrat-redis:6379/4"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4000,http://localhost:5177,http://localhost:5178"
+    ports:
+      - "8064:8064"
+    networks:
+      - venturestrat-network
+    depends_on:
+      venturestrat-postgres:
+        condition: service_healthy
+      venturestrat-redis:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8064/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # Billing Service
+  billing-service:
+    build:
+      context: .
+      dockerfile: ./services/billing-service/Dockerfile
+      target: development
+    container_name: venturestrat-billing-service
+    environment:
+      SERVICE_NAME: billing-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8063"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat"
+      CONSUL_HOST: venturestrat-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "venturestrat-kafka:29092"
+      REDIS_URL: "redis://venturestrat-redis:6379/3"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4000,http://localhost:5178"
+    ports:
+      - "8063:8063"
+    networks:
+      - venturestrat-network
+    depends_on:
+      venturestrat-postgres:
+        condition: service_healthy
+      venturestrat-redis:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8063/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+

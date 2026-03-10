@@ -1,0 +1,21 @@
+apiVersion: v2
+name: registry-service
+description: VentureStrat Service Registry and Discovery
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - service-registry
+  - service-discovery
+  - consul
+  - venturestrat
+
+maintainers:
+  - name: VentureStrat Team
+
+dependencies:
+  - name: consul
+    version: "1.3.0"
+    repository: "https://helm.releases.hashicorp.com"
+    condition: consul.enabled

@@ -1,0 +1,106 @@
+// ContactPerson Service - gRPC API
+// Individual associated with a legal entity — founder, director, signatory, or counterparty
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// ContactPerson Service
+// =============================================================================
+
+service ContactPersonService {
+  // CRUD operations
+  rpc CreateContactPerson(CreateContactPersonRequest) returns (ContactPerson);
+  rpc GetContactPerson(GetContactPersonRequest) returns (ContactPerson);
+  rpc UpdateContactPerson(UpdateContactPersonRequest) returns (ContactPerson);
+  rpc DeleteContactPerson(DeleteContactPersonRequest) returns (DeleteContactPersonResponse);
+
+  // List operations
+  rpc ListContactPersons(ListContactPersonsRequest) returns (ListContactPersonsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create ContactPerson
+message CreateContactPersonRequest {
+  string user_id = 1;  // Auth user who created this person
+  optional string legal_entity_id = 2;  // Company this person belongs to (null for independent counterparties)
+  string full_name = 3;
+  string email = 4;
+  string role = 5;
+  bool is_primary = 6;  // Whether this is the primary contact for the legal entity
+  optional string date_of_birth = 7;
+  optional string residential_address_id = 8;
+}
+
+// Get ContactPerson
+message GetContactPersonRequest {
+  string id = 1;  // UUID of the contactperson
+}
+
+// Update ContactPerson
+message UpdateContactPersonRequest {
+  string id = 1;  // UUID of the contactperson
+  optional string user_id = 2;  // Auth user who created this person
+  optional string legal_entity_id = 3;  // Company this person belongs to (null for independent counterparties)
+  optional string full_name = 4;
+  optional string email = 5;
+  optional string role = 6;
+  optional bool is_primary = 7;  // Whether this is the primary contact for the legal entity
+  optional string date_of_birth = 8;
+  optional string residential_address_id = 9;
+}
+
+// Delete ContactPerson
+message DeleteContactPersonRequest {
+  string id = 1;  // UUID of the contactperson
+}
+
+message DeleteContactPersonResponse {
+  bool success = 1;
+}
+
+// List ContactPersons
+message ListContactPersonsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListContactPersonsResponse {
+  repeated ContactPerson items = 1;  // List of contactpersons
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message ContactPerson {
+  string id = 1;  // UUID primary key
+  string user_id = 2;  // Auth user who created this person
+  optional string legal_entity_id = 3;  // Company this person belongs to (null for independent counterparties)
+  string full_name = 4;
+  string email = 5;
+  string role = 6;
+  bool is_primary = 7;  // Whether this is the primary contact for the legal entity
+  optional string date_of_birth = 8;
+  optional string residential_address_id = 9;
+  string tenant_id = 10;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}

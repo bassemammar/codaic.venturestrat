@@ -1,0 +1,45 @@
+name: ShortlistTag
+service_name: crm-service
+type: entity
+description: "Many-to-many junction between shortlists and tags"
+table_name: vs_shortlist_tag
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: crm
+
+fields:
+  - name: shortlist_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_shortlist
+    fk_column: id
+
+  - name: tag_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_tag
+    fk_column: id
+
+relationships:
+  - name: shortlist
+    type: many_to_one
+    target_entity: Shortlist
+    foreign_key: shortlist_id
+
+  - name: tag
+    type: many_to_one
+    target_entity: Tag
+    foreign_key: tag_id
+
+indexes:
+  - columns: [shortlist_id]
+    name: idx_shortlist_tag_shortlist
+  - columns: [tag_id]
+    name: idx_shortlist_tag_tag
+  - columns: [shortlist_id, tag_id]
+    name: idx_shortlist_tag_unique

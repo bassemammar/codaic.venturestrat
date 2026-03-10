@@ -1,0 +1,47 @@
+name: PipelineStage
+service_name: crm-service
+type: entity
+description: "CRM pipeline stage for investor shortlisting"
+table_name: vs_pipeline_stage
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: crm
+natural_key: code
+seed_strategy: file
+
+fields:
+  - name: name
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Stage display name"
+
+  - name: code
+    type: string
+    max_length: 50
+    nullable: false
+    unique: true
+    description: "Stage code for programmatic use"
+
+  - name: sequence
+    type: integer
+    nullable: false
+    description: "Display ordering"
+
+  - name: color
+    type: string
+    max_length: 20
+    nullable: true
+    description: "Hex color for Kanban column"
+
+  - name: is_active
+    type: boolean
+    nullable: false
+    default: true
+
+indexes:
+  - columns: [sequence]
+    name: idx_pipeline_stage_seq
+  - columns: [code]
+    name: idx_pipeline_stage_code

@@ -1,0 +1,80 @@
+name: ContactPerson
+service_name: legal-service
+type: entity
+description: "Individual associated with a legal entity — founder, director, signatory, or counterparty"
+table_name: vs_contact_person
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Auth user who created this person"
+
+  - name: legal_entity_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_legal_entity
+    fk_column: id
+    description: "Company this person belongs to (null for independent counterparties)"
+
+  - name: full_name
+    type: string
+    max_length: 100
+    nullable: false
+
+  - name: email
+    type: string
+    max_length: 255
+    nullable: false
+
+  - name: role
+    type: string
+    max_length: 20
+    nullable: false
+    enum_values: [founder, employee, investor, advisor, director, counterparty]
+
+  - name: is_primary
+    type: boolean
+    nullable: false
+    default: false
+    description: "Whether this is the primary contact for the legal entity"
+
+  - name: date_of_birth
+    type: date
+    nullable: true
+
+  - name: residential_address_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_legal_address
+    fk_column: id
+
+relationships:
+  - name: legal_entity
+    type: many_to_one
+    target_entity: LegalEntity
+    foreign_key: legal_entity_id
+
+  - name: residential_address
+    type: many_to_one
+    target_entity: LegalAddress
+    foreign_key: residential_address_id
+
+indexes:
+  - columns: [user_id]
+    name: idx_contact_person_user
+  - columns: [legal_entity_id]
+    name: idx_contact_person_entity
+  - columns: [email]
+    name: idx_contact_person_email
+  - columns: [role]
+    name: idx_contact_person_role

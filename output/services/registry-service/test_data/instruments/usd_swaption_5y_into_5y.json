@@ -1,0 +1,16 @@
+{
+  "id": "usd_swaption_5y_into_5y",
+  "instrument_type": "swaption",
+  "currency": "USD",
+  "option_type": "call",
+  "exercise_style": "european",
+  "expiry": "2029-01-10",
+  "underlying_swap": {
+    "notional": 50000000,
+    "tenor": "5Y",
+    "fixed_rate": 0.045
+  },
+  "volatility": 0.25,
+  "model": "Black-76",
+  "description": "5Y into 5Y USD swaption"
+}

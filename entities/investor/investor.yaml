@@ -1,0 +1,137 @@
+name: Investor
+service_name: investor-service
+type: entity
+description: "VC investor profile with contact info, location, stages, types, and social links"
+table_name: vs_investor
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: investor
+
+fields:
+  - name: name
+    type: string
+    max_length: 300
+    nullable: false
+    description: "Full name of the investor"
+
+  - name: avatar
+    type: string
+    max_length: 500
+    nullable: true
+    description: "S3 signed URL for profile image"
+
+  - name: website
+    type: string
+    max_length: 500
+    nullable: true
+
+  - name: phone
+    type: string
+    max_length: 50
+    nullable: true
+
+  - name: title
+    type: string
+    max_length: 200
+    nullable: true
+    description: "Job title, e.g. Managing Partner"
+
+  - name: external_id
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Original source ID from data import"
+
+  - name: city
+    type: string
+    max_length: 100
+    nullable: true
+
+  - name: state
+    type: string
+    max_length: 100
+    nullable: true
+
+  - name: country
+    type: string
+    max_length: 100
+    nullable: true
+
+  - name: company_name
+    type: string
+    max_length: 300
+    nullable: true
+    description: "Fund or firm name"
+
+  - name: stages
+    type: json
+    nullable: false
+    default: "[]"
+    description: "Investment stages, e.g. [\"Seed\", \"Series A\"]"
+
+  - name: investor_types
+    type: json
+    nullable: false
+    default: "[]"
+    description: "Investor types, e.g. [\"Angel\", \"VC\"]"
+
+  - name: social_links
+    type: json
+    nullable: true
+    description: "Social media links: {linkedin, twitter, crunchbase}"
+
+  - name: pipelines
+    type: json
+    nullable: true
+    description: "Deal pipeline data from source"
+
+  - name: founded_companies
+    type: json
+    nullable: true
+
+  - name: country_priority
+    type: integer
+    nullable: false
+    default: 2
+    description: "Sorting weight for country-based ordering"
+
+  - name: source_data
+    type: json
+    nullable: true
+    description: "Raw import data from original source"
+
+relationships:
+  - name: emails
+    type: one_to_many
+    target_entity: InvestorEmail
+    foreign_key: investor_id
+    cascade_delete: true
+
+  - name: markets
+    type: one_to_many
+    target_entity: InvestorMarket
+    foreign_key: investor_id
+    cascade_delete: true
+
+  - name: past_investments
+    type: one_to_many
+    target_entity: InvestorPastInvestment
+    foreign_key: investor_id
+    cascade_delete: true
+
+indexes:
+  - columns: [name]
+    name: idx_investor_name
+  - columns: [country]
+    name: idx_investor_country
+  - columns: [state]
+    name: idx_investor_state
+  - columns: [city]
+    name: idx_investor_city
+  - columns: [country, state, city]
+    name: idx_investor_location
+  - columns: [company_name]
+    name: idx_investor_company
+  - columns: [country_priority, created_at]
+    name: idx_investor_sort

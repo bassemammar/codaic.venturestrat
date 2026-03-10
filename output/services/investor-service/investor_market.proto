@@ -1,0 +1,88 @@
+// InvestorMarket Service - gRPC API
+// Many-to-many junction between investors and markets
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// InvestorMarket Service
+// =============================================================================
+
+service InvestorMarketService {
+  // CRUD operations
+  rpc CreateInvestorMarket(CreateInvestorMarketRequest) returns (InvestorMarket);
+  rpc GetInvestorMarket(GetInvestorMarketRequest) returns (InvestorMarket);
+  rpc UpdateInvestorMarket(UpdateInvestorMarketRequest) returns (InvestorMarket);
+  rpc DeleteInvestorMarket(DeleteInvestorMarketRequest) returns (DeleteInvestorMarketResponse);
+
+  // List operations
+  rpc ListInvestorMarkets(ListInvestorMarketsRequest) returns (ListInvestorMarketsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create InvestorMarket
+message CreateInvestorMarketRequest {
+  string investor_id = 1;
+  string market_id = 2;
+}
+
+// Get InvestorMarket
+message GetInvestorMarketRequest {
+  string id = 1;  // UUID of the investormarket
+}
+
+// Update InvestorMarket
+message UpdateInvestorMarketRequest {
+  string id = 1;  // UUID of the investormarket
+  optional string investor_id = 2;
+  optional string market_id = 3;
+}
+
+// Delete InvestorMarket
+message DeleteInvestorMarketRequest {
+  string id = 1;  // UUID of the investormarket
+}
+
+message DeleteInvestorMarketResponse {
+  bool success = 1;
+}
+
+// List InvestorMarkets
+message ListInvestorMarketsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListInvestorMarketsResponse {
+  repeated InvestorMarket items = 1;  // List of investormarkets
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message InvestorMarket {
+  string id = 1;  // UUID primary key
+  string investor_id = 2;
+  string market_id = 3;
+  string tenant_id = 4;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}

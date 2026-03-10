@@ -1,0 +1,73 @@
+name: DocumentParty
+service_name: legal-service
+type: entity
+description: "Links a legal document to its parties (entity + signatory) with role designation"
+table_name: vs_document_party
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: legal_document_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_legal_document
+    fk_column: id
+
+  - name: legal_entity_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_legal_entity
+    fk_column: id
+    description: "Company acting as party to the document"
+
+  - name: signatory_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_contact_person
+    fk_column: id
+    description: "Person signing on behalf of the entity"
+
+  - name: party_role
+    type: string
+    max_length: 20
+    nullable: false
+    enum_values: [party_a, party_b, disclosing, receiving, employer, employee, investor, company]
+    description: "Role in the document context"
+
+  - name: party_label
+    type: string
+    max_length: 50
+    nullable: true
+    description: "Custom label, e.g. 'The Disclosing Party'"
+
+relationships:
+  - name: legal_document
+    type: many_to_one
+    target_entity: LegalDocument
+    foreign_key: legal_document_id
+
+  - name: legal_entity
+    type: many_to_one
+    target_entity: LegalEntity
+    foreign_key: legal_entity_id
+
+  - name: signatory
+    type: many_to_one
+    target_entity: ContactPerson
+    foreign_key: signatory_id
+
+indexes:
+  - columns: [legal_document_id]
+    name: idx_doc_party_document
+  - columns: [legal_entity_id]
+    name: idx_doc_party_entity
+  - columns: [legal_document_id, party_role]
+    name: idx_doc_party_doc_role

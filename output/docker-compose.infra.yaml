@@ -1,0 +1,133 @@
+# VentureStrat Infrastructure Services
+services:
+  # Consul (service discovery)
+  venturestrat-consul-server-1:
+    image: hashicorp/consul:1.17
+    container_name: venturestrat-consul-server-1
+    command: >
+      agent -server -bootstrap-expect=1 -node=consul-server-1
+      -bind=0.0.0.0 -client=0.0.0.0 -datacenter=dc1 -ui
+    ports:
+      - "8504:8500"
+      - "8604:8600/udp"
+    volumes:
+      - consul-data-1:/consul/data
+    networks:
+      - venturestrat-network
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Kafka + Zookeeper (event bus)
+  venturestrat-zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: venturestrat-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2186:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
+    networks:
+      - venturestrat-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  venturestrat-kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: venturestrat-kafka
+    depends_on:
+      venturestrat-zookeeper:
+        condition: service_healthy
+    ports:
+      - "19096:9092"
+      - "29096:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: venturestrat-zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://venturestrat-kafka:29092,PLAINTEXT_HOST://localhost:19096
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - venturestrat-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "venturestrat-kafka:29092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # PostgreSQL (shared database)
+  venturestrat-postgres:
+    image: postgres:16
+    container_name: venturestrat-postgres
+    environment:
+      POSTGRES_USER: venturestrat
+      POSTGRES_PASSWORD: venturestrat_dev_password
+      POSTGRES_DB: venturestrat
+      POSTGRES_INITDB_ARGS: "--auth-local=trust"
+    ports:
+      - "15436:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init-schemas.sql:/docker-entrypoint-initdb.d/01-init-schemas.sql:ro
+    networks:
+      - venturestrat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U venturestrat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis (caching, rate limiting)
+  venturestrat-redis:
+    image: redis:7.2-alpine
+    container_name: venturestrat-redis
+    ports:
+      - "16383:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - venturestrat-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  venturestrat-network:
+    name: venturestrat-network
+    driver: bridge
+
+volumes:
+  consul-data-1:
+    name: venturestrat-consul-data-1
+  zookeeper-data:
+    name: venturestrat-zookeeper-data
+  zookeeper-log:
+    name: venturestrat-zookeeper-log
+  kafka-data:
+    name: venturestrat-kafka-data
+  postgres-data:
+    name: venturestrat-postgres-data
+  redis-data:
+    name: venturestrat-redis-data

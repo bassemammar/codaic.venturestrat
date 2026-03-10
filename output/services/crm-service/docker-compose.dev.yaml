@@ -1,0 +1,61 @@
+services:
+  crm-service:
+    build:
+      context: ../../
+      dockerfile: services/crm-service/Dockerfile
+      target: development
+    ports:
+      - "8062:8062"
+    environment:
+      # Service configuration
+      - SERVICE_NAME=crm-service
+      - SERVICE_VERSION=1.0.0
+      - HOST=0.0.0.0
+      - PORT=8062
+
+      # Platform infrastructure
+      - CONSUL_HOST=consul-server-1
+      - CONSUL_PORT=8500
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - REGISTRY_SERVICE_URL=http://venturestrat-registry-service:8080
+
+      # Database
+      - DATABASE_URL=postgresql://venturestrat:venturestrat_dev_password@venturestrat-postgres:5432/venturestrat
+
+      # Observability
+      - LOG_LEVEL=DEBUG
+      - LOG_FORMAT=json
+      - OTLP_ENDPOINT=http://jaeger:4317
+
+      # Security
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:4000,http://localhost:8080
+      - RATE_LIMIT_REQUESTS=100
+      - RATE_LIMIT_WINDOW=60
+
+      # Development settings
+      - RELOAD=true
+
+    volumes:
+      # Hot reload source code
+      - ./src:/app/services/crm-service/src:ro
+      - ./tests:/app/services/crm-service/tests:ro
+      - ./protos:/app/services/crm-service/protos:ro
+
+    networks:
+      - codaic_venturestrat-network
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8062/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+    labels:
+      com.venturestrat.service: crm-service
+      com.venturestrat.version: 1.0.0
+      com.venturestrat.environment: development
+
+networks:
+  codaic_venturestrat-network:
+    external: true

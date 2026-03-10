@@ -1,0 +1,97 @@
+// PipelineStage Service - gRPC API
+// CRM pipeline stage for investor shortlisting
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// PipelineStage Service
+// =============================================================================
+
+service PipelineStageService {
+  // CRUD operations
+  rpc CreatePipelineStage(CreatePipelineStageRequest) returns (PipelineStage);
+  rpc GetPipelineStage(GetPipelineStageRequest) returns (PipelineStage);
+  rpc UpdatePipelineStage(UpdatePipelineStageRequest) returns (PipelineStage);
+  rpc DeletePipelineStage(DeletePipelineStageRequest) returns (DeletePipelineStageResponse);
+
+  // List operations
+  rpc ListPipelineStages(ListPipelineStagesRequest) returns (ListPipelineStagesResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create PipelineStage
+message CreatePipelineStageRequest {
+  string name = 1;  // Stage display name
+  string code = 2;  // Stage code for programmatic use
+  int32 sequence = 3;  // Display ordering
+  optional string color = 4;  // Hex color for Kanban column
+  bool is_active = 5;
+}
+
+// Get PipelineStage
+message GetPipelineStageRequest {
+  string id = 1;  // UUID of the pipelinestage
+}
+
+// Update PipelineStage
+message UpdatePipelineStageRequest {
+  string id = 1;  // UUID of the pipelinestage
+  optional string name = 2;  // Stage display name
+  optional string code = 3;  // Stage code for programmatic use
+  optional int32 sequence = 4;  // Display ordering
+  optional string color = 5;  // Hex color for Kanban column
+  optional bool is_active = 6;
+}
+
+// Delete PipelineStage
+message DeletePipelineStageRequest {
+  string id = 1;  // UUID of the pipelinestage
+}
+
+message DeletePipelineStageResponse {
+  bool success = 1;
+}
+
+// List PipelineStages
+message ListPipelineStagesRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListPipelineStagesResponse {
+  repeated PipelineStage items = 1;  // List of pipelinestages
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message PipelineStage {
+  string id = 1;  // UUID primary key
+  string name = 2;  // Stage display name
+  string code = 3;  // Stage code for programmatic use
+  int32 sequence = 4;  // Display ordering
+  optional string color = 5;  // Hex color for Kanban column
+  bool is_active = 6;
+  string tenant_id = 7;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}

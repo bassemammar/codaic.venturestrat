@@ -1,0 +1,198 @@
+// VentureStrat Registry Service - gRPC API
+// High-performance service registration and discovery
+
+syntax = "proto3";
+
+package venturestrat.registry.v1;
+
+// =============================================================================
+// Registry Service
+// =============================================================================
+
+service RegistryService {
+  // Registration
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Deregister(DeregisterRequest) returns (DeregisterResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+
+  // Discovery
+  rpc Discover(DiscoverRequest) returns (DiscoverResponse);
+  rpc Watch(WatchRequest) returns (stream ServiceEvent);
+  rpc ListServices(ListServicesRequest) returns (ListServicesResponse);
+
+  // Health
+  rpc GetHealth(GetHealthRequest) returns (GetHealthResponse);
+  rpc GetServiceHealth(GetServiceHealthRequest) returns (GetServiceHealthResponse);
+}
+
+// =============================================================================
+// Registration Messages
+// =============================================================================
+
+message HealthCheckConfig {
+  string http_endpoint = 1;
+  string grpc_service = 2;
+  string tcp_address = 3;
+  int32 interval_seconds = 4;
+  int32 timeout_seconds = 5;
+  int32 deregister_after_seconds = 6;
+}
+
+message ProvidesConfig {
+  map<string, string> apis = 1;
+  repeated string events = 2;
+}
+
+message RegisterRequest {
+  string name = 1;
+  string version = 2;
+  string instance_id = 3;
+  string address = 4;
+  int32 port = 5;
+  string protocol = 6;
+  repeated string depends = 7;
+  map<string, string> metadata = 8;
+  HealthCheckConfig health_check = 9;
+  repeated string tags = 10;
+  ProvidesConfig provides = 11;
+  // Hot reload test field - added by task 19.5
+  string hot_reload_test = 12;
+}
+
+message RegisterResponse {
+  string instance_id = 1;
+  string consul_service_id = 2;
+  string registered_at = 3;
+  string health_check_id = 4;
+}
+
+message DeregisterRequest {
+  string instance_id = 1;
+  string service_name = 2;
+  string version = 3;
+  string reason = 4;
+}
+
+message DeregisterResponse {
+  bool success = 1;
+  string deregistered_at = 2;
+}
+
+message HeartbeatRequest {
+  string instance_id = 1;
+  string status = 2;
+}
+
+message HeartbeatResponse {
+  string instance_id = 1;
+  string status = 2;
+  string last_heartbeat = 3;
+}
+
+// =============================================================================
+// Discovery Messages
+// =============================================================================
+
+message ServiceInstance {
+  string instance_id = 1;
+  string address = 2;
+  int32 port = 3;
+  string protocol = 4;
+  string version = 5;
+  string health_status = 6;
+  repeated string tags = 7;
+  map<string, string> metadata = 8;
+}
+
+message DiscoverRequest {
+  string service_name = 1;
+  string version_constraint = 2;
+  repeated string tags = 3;
+  bool healthy_only = 4;
+}
+
+message DiscoverResponse {
+  string service = 1;
+  repeated ServiceInstance instances = 2;
+  int32 total_instances = 3;
+  int32 healthy_instances = 4;
+}
+
+message WatchRequest {
+  string service_name = 1;  // empty for all services
+}
+
+message ServiceEvent {
+  string event_type = 1;  // registered, deregistered, health_changed
+  string service_name = 2;
+  string instance_id = 3;
+  string version = 4;
+  ServiceInstance instance = 5;
+  string timestamp = 6;
+}
+
+message ListServicesRequest {
+  repeated string tags = 1;
+}
+
+message ServiceSummary {
+  string name = 1;
+  repeated string versions = 2;
+  int32 instance_count = 3;
+  int32 healthy_count = 4;
+  repeated string tags = 5;
+}
+
+message ListServicesResponse {
+  repeated ServiceSummary services = 1;
+  int32 total_services = 2;
+}
+
+// =============================================================================
+// Health Messages
+// =============================================================================
+
+message GetHealthRequest {}
+
+message InstanceHealthCount {
+  int32 healthy = 1;
+  int32 warning = 2;
+  int32 critical = 3;
+}
+
+message ServiceHealthSummary {
+  string name = 1;
+  string status = 2;
+  InstanceHealthCount instances = 3;
+}
+
+message GetHealthResponse {
+  repeated ServiceHealthSummary services = 1;
+  string overall_status = 2;
+  int32 total_instances = 3;
+  int32 healthy_instances = 4;
+}
+
+message GetServiceHealthRequest {
+  string service_name = 1;
+}
+
+message HealthCheck {
+  string name = 1;
+  string status = 2;
+  string output = 3;
+  string last_check = 4;
+}
+
+message InstanceHealthDetail {
+  string instance_id = 1;
+  string status = 2;
+  repeated HealthCheck checks = 3;
+  int64 uptime_seconds = 4;
+}
+
+message GetServiceHealthResponse {
+  string service = 1;
+  string status = 2;
+  repeated InstanceHealthDetail instances = 3;
+}

@@ -1,0 +1,49 @@
+name: LifecycleEmail
+service_name: outreach-service
+type: entity
+description: "Tracks drip campaign email execution per user"
+table_name: vs_lifecycle_email
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: outreach
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+
+  - name: template_code
+    type: string
+    max_length: 50
+    nullable: false
+    description: "Lifecycle template identifier: welcome, onboarding_reminder, gmail_reminder, etc."
+
+  - name: status
+    type: string
+    max_length: 20
+    nullable: false
+    default: "pending"
+    enum_values: [pending, sent, skipped, cancelled]
+
+  - name: scheduled_for
+    type: datetime
+    nullable: false
+    description: "When this lifecycle email should be sent"
+
+  - name: sent_at
+    type: datetime
+    nullable: true
+
+  - name: skip_reason
+    type: string
+    max_length: 200
+    nullable: true
+    description: "Why this email was skipped"
+
+indexes:
+  - columns: [user_id, template_code]
+    name: idx_lifecycle_user_code
+  - columns: [status, scheduled_for]
+    name: idx_lifecycle_pending

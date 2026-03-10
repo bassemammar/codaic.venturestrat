@@ -1,0 +1,112 @@
+// EquityGrant Service - gRPC API
+// Cap table entry — equity holding in a legal entity with share class and valuation
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// EquityGrant Service
+// =============================================================================
+
+service EquityGrantService {
+  // CRUD operations
+  rpc CreateEquityGrant(CreateEquityGrantRequest) returns (EquityGrant);
+  rpc GetEquityGrant(GetEquityGrantRequest) returns (EquityGrant);
+  rpc UpdateEquityGrant(UpdateEquityGrantRequest) returns (EquityGrant);
+  rpc DeleteEquityGrant(DeleteEquityGrantRequest) returns (DeleteEquityGrantResponse);
+
+  // List operations
+  rpc ListEquityGrants(ListEquityGrantsRequest) returns (ListEquityGrantsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create EquityGrant
+message CreateEquityGrantRequest {
+  string legal_entity_id = 1;  // Company whose shares are held
+  optional string holder_person_id = 2;  // Person holding equity (null if entity holder)
+  optional string holder_entity_id = 3;  // Entity holding equity (null if person holder)
+  string holder_type = 4;  // Polymorphic holder discriminator
+  string share_class = 5;
+  int32 number_of_shares = 6;  // Number of shares held (must be > 0)
+  double percentage = 7;  // Ownership percentage (0.01 to 100.00)
+  optional double valuation = 8;  // Valuation at time of issue
+  string issue_date = 9;
+  optional string source_document_id = 10;  // Reference to LegalDocument that created this grant
+}
+
+// Get EquityGrant
+message GetEquityGrantRequest {
+  string id = 1;  // UUID of the equitygrant
+}
+
+// Update EquityGrant
+message UpdateEquityGrantRequest {
+  string id = 1;  // UUID of the equitygrant
+  optional string legal_entity_id = 2;  // Company whose shares are held
+  optional string holder_person_id = 3;  // Person holding equity (null if entity holder)
+  optional string holder_entity_id = 4;  // Entity holding equity (null if person holder)
+  optional string holder_type = 5;  // Polymorphic holder discriminator
+  optional string share_class = 6;
+  optional int32 number_of_shares = 7;  // Number of shares held (must be > 0)
+  optional double percentage = 8;  // Ownership percentage (0.01 to 100.00)
+  optional double valuation = 9;  // Valuation at time of issue
+  optional string issue_date = 10;
+  optional string source_document_id = 11;  // Reference to LegalDocument that created this grant
+}
+
+// Delete EquityGrant
+message DeleteEquityGrantRequest {
+  string id = 1;  // UUID of the equitygrant
+}
+
+message DeleteEquityGrantResponse {
+  bool success = 1;
+}
+
+// List EquityGrants
+message ListEquityGrantsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListEquityGrantsResponse {
+  repeated EquityGrant items = 1;  // List of equitygrants
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message EquityGrant {
+  string id = 1;  // UUID primary key
+  string legal_entity_id = 2;  // Company whose shares are held
+  optional string holder_person_id = 3;  // Person holding equity (null if entity holder)
+  optional string holder_entity_id = 4;  // Entity holding equity (null if person holder)
+  string holder_type = 5;  // Polymorphic holder discriminator
+  string share_class = 6;
+  int32 number_of_shares = 7;  // Number of shares held (must be > 0)
+  double percentage = 8;  // Ownership percentage (0.01 to 100.00)
+  optional double valuation = 9;  // Valuation at time of issue
+  string issue_date = 10;
+  optional string source_document_id = 11;  // Reference to LegalDocument that created this grant
+  string tenant_id = 12;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}

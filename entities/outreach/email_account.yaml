@@ -1,0 +1,58 @@
+name: EmailAccount
+service_name: outreach-service
+type: entity
+description: "OAuth email account for sending via Gmail, Microsoft, or SendGrid"
+table_name: vs_email_account
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: outreach
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Auth user reference"
+
+  - name: provider
+    type: string
+    max_length: 30
+    nullable: false
+    enum_values: [gmail, microsoft, sendgrid]
+
+  - name: email_address
+    type: string
+    max_length: 255
+    nullable: false
+
+  - name: access_token
+    type: text
+    nullable: true
+    description: "Encrypted OAuth access token"
+
+  - name: refresh_token
+    type: text
+    nullable: true
+    description: "Encrypted OAuth refresh token"
+
+  - name: token_expires_at
+    type: datetime
+    nullable: true
+
+  - name: watch_history_id
+    type: string
+    max_length: 100
+    nullable: true
+    description: "Gmail push notification history ID"
+
+  - name: is_active
+    type: boolean
+    nullable: false
+    default: true
+
+indexes:
+  - columns: [user_id]
+    name: idx_email_account_user
+  - columns: [provider, user_id]
+    name: idx_email_account_provider_user

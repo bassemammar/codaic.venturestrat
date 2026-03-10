@@ -1,0 +1,71 @@
+name: DocumentTemplate
+service_name: legal-service
+type: entity
+description: "Legal document template definition — NDA, founders agreement, SAFE, employment, etc."
+table_name: vs_document_template
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: name
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Template display name, e.g. Mutual NDA (England & Wales)"
+
+  - name: document_type
+    type: string
+    max_length: 50
+    nullable: false
+    enum_values: [mutual_nda, one_way_nda, founders_agreement, employment_agreement, safe_agreement, certificate_of_incorporation, master_services_agreement]
+
+  - name: jurisdiction
+    type: string
+    max_length: 30
+    nullable: false
+    enum_values: [england_wales, scotland, delaware, california, difc, ksa, universal]
+    description: "Which legal jurisdiction this template covers"
+
+  - name: version
+    type: string
+    max_length: 20
+    nullable: false
+    default: "1.0"
+    description: "Semantic version of the template"
+
+  - name: description
+    type: text
+    nullable: true
+
+  - name: template_content
+    type: text
+    nullable: false
+    description: "Jinja2 template content for document generation"
+
+  - name: configuration_schema
+    type: json
+    nullable: true
+    description: "JSON schema defining required configuration fields for this template"
+
+  - name: is_active
+    type: boolean
+    nullable: false
+    default: true
+
+  - name: clause_ids
+    type: json
+    nullable: true
+    default: "[]"
+    description: "Ordered list of TemplateClause IDs used in this template"
+
+indexes:
+  - columns: [document_type]
+    name: idx_doc_template_type
+  - columns: [jurisdiction]
+    name: idx_doc_template_jurisdiction
+  - columns: [document_type, jurisdiction]
+    name: idx_doc_template_type_jurisdiction
+  - columns: [is_active]
+    name: idx_doc_template_active

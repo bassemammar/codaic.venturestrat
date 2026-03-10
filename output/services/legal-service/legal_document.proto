@@ -1,0 +1,121 @@
+// LegalDocument Service - gRPC API
+// Generated legal document with full lifecycle tracking, template reference, and party links
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// LegalDocument Service
+// =============================================================================
+
+service LegalDocumentService {
+  // CRUD operations
+  rpc CreateLegalDocument(CreateLegalDocumentRequest) returns (LegalDocument);
+  rpc GetLegalDocument(GetLegalDocumentRequest) returns (LegalDocument);
+  rpc UpdateLegalDocument(UpdateLegalDocumentRequest) returns (LegalDocument);
+  rpc DeleteLegalDocument(DeleteLegalDocumentRequest) returns (DeleteLegalDocumentResponse);
+
+  // List operations
+  rpc ListLegalDocuments(ListLegalDocumentsRequest) returns (ListLegalDocumentsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create LegalDocument
+message CreateLegalDocumentRequest {
+  string user_id = 1;  // Auth user who created this document
+  optional string template_id = 2;  // Template used to generate this document
+  optional string investor_id = 3;  // Cross-service reference to investor-service Investor
+  string document_type = 4;
+  string title = 5;
+  string status = 6;
+  string configuration = 7;  // JSONB storing all form answers and clause variant selections
+  optional string content_markdown = 8;  // Generated markdown content
+  optional string content_html = 9;  // Rendered HTML for preview
+  optional string file_path_docx = 10;
+  optional string file_path_pdf = 11;
+  int32 version = 12;
+  optional google.protobuf.Timestamp generated_at = 13;
+}
+
+// Get LegalDocument
+message GetLegalDocumentRequest {
+  string id = 1;  // UUID of the legaldocument
+}
+
+// Update LegalDocument
+message UpdateLegalDocumentRequest {
+  string id = 1;  // UUID of the legaldocument
+  optional string user_id = 2;  // Auth user who created this document
+  optional string template_id = 3;  // Template used to generate this document
+  optional string investor_id = 4;  // Cross-service reference to investor-service Investor
+  optional string document_type = 5;
+  optional string title = 6;
+  optional string status = 7;
+  optional string configuration = 8;  // JSONB storing all form answers and clause variant selections
+  optional string content_markdown = 9;  // Generated markdown content
+  optional string content_html = 10;  // Rendered HTML for preview
+  optional string file_path_docx = 11;
+  optional string file_path_pdf = 12;
+  optional int32 version = 13;
+  optional google.protobuf.Timestamp generated_at = 14;
+}
+
+// Delete LegalDocument
+message DeleteLegalDocumentRequest {
+  string id = 1;  // UUID of the legaldocument
+}
+
+message DeleteLegalDocumentResponse {
+  bool success = 1;
+}
+
+// List LegalDocuments
+message ListLegalDocumentsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListLegalDocumentsResponse {
+  repeated LegalDocument items = 1;  // List of legaldocuments
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message LegalDocument {
+  string id = 1;  // UUID primary key
+  string user_id = 2;  // Auth user who created this document
+  optional string template_id = 3;  // Template used to generate this document
+  optional string investor_id = 4;  // Cross-service reference to investor-service Investor
+  string document_type = 5;
+  string title = 6;
+  string status = 7;
+  string configuration = 8;  // JSONB storing all form answers and clause variant selections
+  optional string content_markdown = 9;  // Generated markdown content
+  optional string content_html = 10;  // Rendered HTML for preview
+  optional string file_path_docx = 11;
+  optional string file_path_pdf = 12;
+  int32 version = 13;
+  optional google.protobuf.Timestamp generated_at = 14;
+  string tenant_id = 15;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 16;
+  google.protobuf.Timestamp updated_at = 17;
+}

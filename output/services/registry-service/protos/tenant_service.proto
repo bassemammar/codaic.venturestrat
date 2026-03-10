@@ -1,0 +1,211 @@
+// VentureStrat Tenant Service - gRPC API
+// Multi-tenancy management with lifecycle operations
+
+syntax = "proto3";
+
+package venturestrat.registry.tenant.v1;
+
+// =============================================================================
+// Tenant Service
+// =============================================================================
+
+service TenantService {
+  // Tenant CRUD operations
+  rpc CreateTenant(CreateTenantRequest) returns (CreateTenantResponse);
+  rpc GetTenant(GetTenantRequest) returns (GetTenantResponse);
+  rpc GetTenantBySlug(GetTenantBySlugRequest) returns (GetTenantResponse);
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse);
+  rpc UpdateTenant(UpdateTenantRequest) returns (UpdateTenantResponse);
+
+  // Tenant lifecycle operations
+  rpc SuspendTenant(SuspendTenantRequest) returns (SuspendTenantResponse);
+  rpc ResumeTenant(ResumeTenantRequest) returns (ResumeTenantResponse);
+  rpc DeleteTenant(DeleteTenantRequest) returns (DeleteTenantResponse);
+  rpc PurgeTenant(PurgeTenantRequest) returns (PurgeTenantResponse);
+
+  // System operations
+  rpc GetSystemTenant(GetSystemTenantRequest) returns (GetSystemTenantResponse);
+  rpc GetTenantsForPurge(GetTenantsForPurgeRequest) returns (GetTenantsForPurgeResponse);
+
+  // Health check
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// =============================================================================
+// Tenant Messages
+// =============================================================================
+
+enum TenantStatus {
+  TENANT_STATUS_UNSPECIFIED = 0;
+  TENANT_STATUS_ACTIVE = 1;
+  TENANT_STATUS_SUSPENDED = 2;
+  TENANT_STATUS_DELETED = 3;
+}
+
+message Tenant {
+  string id = 1;
+  string slug = 2;
+  string name = 3;
+  TenantStatus status = 4;
+  map<string, string> config = 5;
+  string keycloak_org_id = 6;
+  string created_at = 7;   // RFC3339 timestamp
+  string updated_at = 8;   // RFC3339 timestamp
+  string deleted_at = 9;   // RFC3339 timestamp, optional
+}
+
+// =============================================================================
+// Create Tenant Messages
+// =============================================================================
+
+message CreateTenantRequest {
+  string slug = 1;
+  string name = 2;
+  map<string, string> config = 3;  // optional tenant configuration
+  string admin_email = 4;          // optional admin user email
+}
+
+message CreateTenantResponse {
+  Tenant tenant = 1;
+  string keycloak_org_id = 2;
+  bool admin_user_invited = 3;
+}
+
+// =============================================================================
+// Get Tenant Messages
+// =============================================================================
+
+message GetTenantRequest {
+  string tenant_id = 1;
+}
+
+message GetTenantBySlugRequest {
+  string slug = 1;
+}
+
+message GetTenantResponse {
+  Tenant tenant = 1;
+}
+
+// =============================================================================
+// List Tenants Messages
+// =============================================================================
+
+message ListTenantsRequest {
+  string status = 1;      // optional status filter (active, suspended, deleted)
+  string search = 2;      // optional search by name or slug
+  int32 page = 3;         // page number (1-based), default: 1
+  int32 page_size = 4;    // items per page, default: 50
+}
+
+message ListTenantsResponse {
+  repeated Tenant tenants = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// =============================================================================
+// Update Tenant Messages
+// =============================================================================
+
+message UpdateTenantRequest {
+  string tenant_id = 1;
+  string name = 2;                  // optional new name
+  map<string, string> config = 3;  // optional configuration updates (merged)
+}
+
+message UpdateTenantResponse {
+  Tenant tenant = 1;
+}
+
+// =============================================================================
+// Tenant Lifecycle Messages
+// =============================================================================
+
+message SuspendTenantRequest {
+  string tenant_id = 1;
+  string reason = 2;
+}
+
+message SuspendTenantResponse {
+  Tenant tenant = 1;
+  string suspended_at = 2;    // RFC3339 timestamp
+  string suspension_reason = 3;
+}
+
+message ResumeTenantRequest {
+  string tenant_id = 1;
+}
+
+message ResumeTenantResponse {
+  Tenant tenant = 1;
+}
+
+message DeleteTenantRequest {
+  string tenant_id = 1;
+  string reason = 2;
+}
+
+message DeleteTenantResponse {
+  Tenant tenant = 1;
+  string deleted_at = 2;      // RFC3339 timestamp
+  string purge_at = 3;        // RFC3339 timestamp (30 days from deletion)
+  string deletion_reason = 4;
+}
+
+message PurgeTenantRequest {
+  string tenant_id = 1;
+}
+
+message PurgeTenantResponse {
+  bool success = 1;
+  string purged_at = 2;       // RFC3339 timestamp
+}
+
+// =============================================================================
+// System Operations Messages
+// =============================================================================
+
+message GetSystemTenantRequest {
+  // Empty - system tenant is well-known
+}
+
+message GetSystemTenantResponse {
+  Tenant tenant = 1;
+}
+
+message GetTenantsForPurgeRequest {
+  // Empty - returns all tenants eligible for purge
+}
+
+message GetTenantsForPurgeResponse {
+  repeated Tenant tenants = 1;
+  int32 total = 2;
+}
+
+// =============================================================================
+// Health Check Messages
+// =============================================================================
+
+message HealthCheckRequest {
+  // Empty - basic health check
+}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string status = 2;          // human-readable status message
+  bool database_connected = 3;
+  bool system_tenant_exists = 4;
+  bool external_services_connected = 5;
+}
+
+// =============================================================================
+// Error Messages
+// =============================================================================
+
+message ErrorDetails {
+  string code = 1;          // error code (tenant_not_found, validation_error, etc.)
+  string message = 2;       // human-readable error message
+  map<string, string> details = 3;  // additional error context
+}

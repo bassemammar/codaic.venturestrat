@@ -1,0 +1,8 @@
+# Manifest with unknown fields that should be ignored (with warning)
+name: service-with-extras
+version: 1.0.0
+description: Service with extra fields
+
+# These fields are not in the schema
+custom_field: some value
+deprecated_config: old stuff

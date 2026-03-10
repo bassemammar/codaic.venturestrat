@@ -1,0 +1,65 @@
+# Complete valid manifest with all fields
+name: pricing-service
+version: 1.2.0
+description: Real-time pricing engine for FX and derivatives
+author: VentureStrat Team
+license: MIT
+
+depends:
+  - market-data-service@^1.0.0
+  - reference-data-service@~1.2.0
+
+provides:
+  events:
+    - pricing.quote.created
+    - pricing.quote.updated
+    - pricing.rfq.requested
+  apis:
+    rest: /api/v1/pricing
+    grpc: pricing.v1.PricingService
+
+migrations:
+  - migrations/001_initial.sql
+  - migrations/002_add_vol_surface.sql
+
+security:
+  roles:
+    - pricer
+    - pricer_admin
+  rules:
+    - model: Quote
+      role: pricer
+      read: true
+      write: false
+    - model: Quote
+      role: pricer_admin
+      read: true
+      write: true
+      create: true
+      delete: true
+
+ui:
+  schemas:
+    - ui/quote_form.json
+    - ui/quote_list.json
+
+health:
+  liveness: /health/live
+  readiness: /health/ready
+  interval: 15
+  timeout: 3
+  deregister_after: 120
+
+resources:
+  cpu: 500m-2000m
+  memory: 512Mi-2Gi
+  replicas: 2-10
+
+metadata:
+  team: quant
+  tier: critical
+
+tags:
+  - production
+  - pricing
+  - real-time

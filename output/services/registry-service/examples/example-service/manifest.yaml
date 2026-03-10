@@ -1,0 +1,67 @@
+# Example Service Manifest
+# This demonstrates the manifest.yaml format for VentureStrat services
+
+name: example-service
+version: 1.0.0
+description: Example service demonstrating SDK usage
+
+# Service dependencies - these will be discovered on startup
+depends:
+  - market-data-service@^1.0.0
+
+# What this service provides to other services
+provides:
+  apis:
+    rest: /api/v1/example
+    grpc: example.v1.ExampleService
+  events:
+    - example.data.processed
+    - example.status.changed
+
+# Health check endpoints
+health:
+  liveness: /health/live
+  readiness: /health/ready
+  interval: 10
+  timeout: 5
+  deregister_after: 60
+
+# Resource requirements (for Kubernetes)
+resources:
+  cpu: 100m-500m
+  memory: 128Mi-512Mi
+  replicas: 1-3
+
+# Observability configuration
+observability:
+  tier: standard
+  metrics:
+    enabled: true
+    endpoint: /metrics
+    histogram_buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5]
+    slo:
+      p95_target_ms: 200
+      p99_target_ms: 500
+  logging:
+    enabled: true
+    level: INFO
+    structured: true
+    correlation_id: true
+    sensitive_data_masking: true
+  tracing:
+    enabled: true
+    sampling_rate: 0.05
+    otlp_endpoint: http://jaeger:4317
+  consul_tags:
+    - metrics
+
+# Tags for filtering
+tags:
+  - example
+  - development
+
+# Metadata
+metadata:
+  team: platform
+  oncall: platform-team@example.com
+  documentation: https://docs.example.com/example-service

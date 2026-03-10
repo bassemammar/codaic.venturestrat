@@ -1,0 +1,3 @@
+# Invalid manifest - bad service name
+name: BAD_NAME_123  # Uppercase and underscores not allowed
+version: 1.0.0

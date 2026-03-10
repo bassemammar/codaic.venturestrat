@@ -1,0 +1,119 @@
+manifest_version: 1
+name: outreach-service
+version: 1.0.0
+description: VentureStrat outreach-service
+depends: []
+provides:
+  apis:
+    rest: /api/v1
+  events:
+  - topic: outreach.email_account.created
+    schema: EmailAccount.Created
+  - topic: outreach.email_account.updated
+    schema: EmailAccount.Updated
+  - topic: outreach.email_account.deleted
+    schema: EmailAccount.Deleted
+  - topic: outreach.email_template.created
+    schema: EmailTemplate.Created
+  - topic: outreach.email_template.updated
+    schema: EmailTemplate.Updated
+  - topic: outreach.email_template.deleted
+    schema: EmailTemplate.Deleted
+  - topic: outreach.lifecycle_email.created
+    schema: LifecycleEmail.Created
+  - topic: outreach.lifecycle_email.updated
+    schema: LifecycleEmail.Updated
+  - topic: outreach.lifecycle_email.deleted
+    schema: LifecycleEmail.Deleted
+  - topic: outreach.message.created
+    schema: Message.Created
+  - topic: outreach.message.updated
+    schema: Message.Updated
+  - topic: outreach.message.deleted
+    schema: Message.Deleted
+  - topic: outreach.message.sent
+    description: Emitted when an email is successfully sent
+    schema:
+      message_id: uuid
+      user_id: uuid
+      investor_id: uuid
+      subject: string
+      sent_at: datetime
+  - topic: outreach.message.replied
+    description: Emitted when a reply is detected via webhook
+    schema:
+      message_id: uuid
+      user_id: uuid
+      investor_id: uuid
+      thread_id: string
+      replied_at: datetime
+  - topic: outreach.message.scheduled
+    description: Emitted when an email is scheduled for future send
+    schema:
+      message_id: uuid
+      scheduled_for: datetime
+consumes:
+  events:
+  - topic: outreach.send_email
+    handler: handle_send_email
+    description: Trigger to send a scheduled/queued email
+    target_entity: Message
+    action: custom
+health:
+  liveness: /health/live
+  readiness: /health/ready
+  interval: 10
+  timeout: 5
+  failure_threshold: 3
+  success_threshold: 1
+  deregister_after: 60
+resources:
+  cpu:
+    request: 100m
+    limit: 500m
+  memory:
+    request: 128Mi
+    limit: 512Mi
+tags:
+- fastapi
+- development
+metadata:
+  team: platform
+  service_type: fastapi
+  protocol: http
+observability:
+  tier: fast
+  metrics:
+    enabled: true
+    endpoint: /metrics
+    histogram_buckets:
+    - 0.005
+    - 0.01
+    - 0.025
+    - 0.05
+    - 0.1
+    - 0.25
+    - 0.5
+    slo:
+      p95_target_ms: 50
+      p99_target_ms: 100
+  logging:
+    enabled: true
+    level: INFO
+    structured: true
+    correlation_id: true
+  tracing:
+    enabled: true
+    sampling_rate: 1.0
+    otlp_endpoint: http://jaeger:4317
+  consul_tags:
+  - metrics
+testing:
+  markers:
+  - unit
+  - integration
+  coverage_threshold: 80
+  gates:
+  - lint
+  - typecheck
+  timeout: 300

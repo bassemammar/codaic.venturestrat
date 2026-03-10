@@ -1,0 +1,112 @@
+// Subscription Service - gRPC API
+// User subscription linked to Stripe
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// Subscription Service
+// =============================================================================
+
+service SubscriptionService {
+  // CRUD operations
+  rpc CreateSubscription(CreateSubscriptionRequest) returns (Subscription);
+  rpc GetSubscription(GetSubscriptionRequest) returns (Subscription);
+  rpc UpdateSubscription(UpdateSubscriptionRequest) returns (Subscription);
+  rpc DeleteSubscription(DeleteSubscriptionRequest) returns (DeleteSubscriptionResponse);
+
+  // List operations
+  rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create Subscription
+message CreateSubscriptionRequest {
+  string user_id = 1;  // Auth user reference — one subscription per user
+  string plan_id = 2;
+  string status = 3;
+  optional string stripe_customer_id = 4;
+  optional string stripe_subscription_id = 5;
+  optional string stripe_payment_method_id = 6;
+  optional string billing_period = 7;
+  optional google.protobuf.Timestamp current_period_end = 8;
+  bool cancel_at_period_end = 9;
+  optional google.protobuf.Timestamp trial_ends_at = 10;
+}
+
+// Get Subscription
+message GetSubscriptionRequest {
+  string id = 1;  // UUID of the subscription
+}
+
+// Update Subscription
+message UpdateSubscriptionRequest {
+  string id = 1;  // UUID of the subscription
+  optional string user_id = 2;  // Auth user reference — one subscription per user
+  optional string plan_id = 3;
+  optional string status = 4;
+  optional string stripe_customer_id = 5;
+  optional string stripe_subscription_id = 6;
+  optional string stripe_payment_method_id = 7;
+  optional string billing_period = 8;
+  optional google.protobuf.Timestamp current_period_end = 9;
+  optional bool cancel_at_period_end = 10;
+  optional google.protobuf.Timestamp trial_ends_at = 11;
+}
+
+// Delete Subscription
+message DeleteSubscriptionRequest {
+  string id = 1;  // UUID of the subscription
+}
+
+message DeleteSubscriptionResponse {
+  bool success = 1;
+}
+
+// List Subscriptions
+message ListSubscriptionsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListSubscriptionsResponse {
+  repeated Subscription items = 1;  // List of subscriptions
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message Subscription {
+  string id = 1;  // UUID primary key
+  string user_id = 2;  // Auth user reference — one subscription per user
+  string plan_id = 3;
+  string status = 4;
+  optional string stripe_customer_id = 5;
+  optional string stripe_subscription_id = 6;
+  optional string stripe_payment_method_id = 7;
+  optional string billing_period = 8;
+  optional google.protobuf.Timestamp current_period_end = 9;
+  bool cancel_at_period_end = 10;
+  optional google.protobuf.Timestamp trial_ends_at = 11;
+  string tenant_id = 12;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}

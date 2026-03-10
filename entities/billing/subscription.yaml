@@ -1,0 +1,99 @@
+name: Subscription
+service_name: billing-service
+type: entity
+description: "User subscription linked to Stripe"
+table_name: vs_subscription
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: billing
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+    unique: true
+    description: "Auth user reference — one subscription per user"
+
+  - name: plan_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_plan
+    fk_column: id
+
+  - name: status
+    type: string
+    max_length: 30
+    nullable: false
+    default: "trialing"
+    enum_values: [trialing, active, past_due, cancelled, incomplete]
+
+  - name: stripe_customer_id
+    type: string
+    max_length: 100
+    nullable: true
+    unique: true
+
+  - name: stripe_subscription_id
+    type: string
+    max_length: 100
+    nullable: true
+    unique: true
+
+  - name: stripe_payment_method_id
+    type: string
+    max_length: 100
+    nullable: true
+
+  - name: billing_period
+    type: string
+    max_length: 20
+    nullable: true
+    enum_values: [monthly, quarterly, annually]
+
+  - name: current_period_end
+    type: datetime
+    nullable: true
+
+  - name: cancel_at_period_end
+    type: boolean
+    nullable: false
+    default: false
+
+  - name: trial_ends_at
+    type: datetime
+    nullable: true
+
+relationships:
+  - name: plan
+    type: many_to_one
+    target_entity: Plan
+    foreign_key: plan_id
+
+indexes:
+  - columns: [user_id]
+    name: idx_subscription_user
+  - columns: [stripe_customer_id]
+    name: idx_subscription_stripe_cust
+  - columns: [status]
+    name: idx_subscription_status
+
+lifecycle:
+  field: status
+  initial: trialing
+  transitions:
+    - from: trialing
+      to: active
+      event: billing.subscription.activated
+      description: "Payment confirmed, subscription active"
+    - from: [trialing, active]
+      to: past_due
+      event: billing.subscription.past_due
+      description: "Payment failed"
+    - from: [active, past_due]
+      to: cancelled
+      event: billing.subscription.cancelled
+      description: "Subscription cancelled"

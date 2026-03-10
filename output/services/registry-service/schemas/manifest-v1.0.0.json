@@ -1,0 +1,237 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://venturestrat.io/schemas/manifest-v1.0.0.json",
+  "title": "VentureStrat Service Manifest",
+  "description": "Service descriptor schema for VentureStrat microservices (like BaseModel's __manifest__.py)",
+  "type": "object",
+  "required": ["name", "version"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
+      "minLength": 2,
+      "maxLength": 63,
+      "description": "Service name (lowercase, alphanumeric with hyphens)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "description": "Semantic version (e.g., 1.2.0, 1.0.0-alpha.1)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Human-readable service description"
+    },
+    "author": {
+      "type": "string",
+      "description": "Service author or team name"
+    },
+    "license": {
+      "type": "string",
+      "description": "Software license identifier"
+    },
+    "depends": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*[a-z0-9]@[\\^~>=<0-9.*-]+$",
+        "description": "Dependency with semver constraint (e.g., market-data-service@^1.0.0)"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Service dependencies with version constraints"
+    },
+    "provides": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)*$"
+          },
+          "uniqueItems": true,
+          "description": "Events this service publishes (e.g., pricing.quote.created)"
+        },
+        "apis": {
+          "type": "object",
+          "properties": {
+            "rest": {
+              "type": "string",
+              "pattern": "^/.*$",
+              "description": "REST API base path"
+            },
+            "grpc": {
+              "type": "string",
+              "description": "gRPC service name"
+            },
+            "graphql": {
+              "type": "string",
+              "pattern": "^/.*$",
+              "description": "GraphQL endpoint path"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "description": "APIs and events this service provides"
+    },
+    "migrations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^migrations/.*\\.sql$"
+      },
+      "uniqueItems": true,
+      "description": "Database migration files"
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true,
+          "description": "Roles defined by this service"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["model", "role"],
+            "properties": {
+              "model": {
+                "type": "string",
+                "description": "Model name"
+              },
+              "role": {
+                "type": "string",
+                "description": "Role name"
+              },
+              "read": {
+                "type": "boolean",
+                "default": false
+              },
+              "write": {
+                "type": "boolean",
+                "default": false
+              },
+              "create": {
+                "type": "boolean",
+                "default": false
+              },
+              "delete": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": "Access control rules per model/role"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Security configuration"
+    },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "schemas": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^ui/.*\\.json$"
+          },
+          "uniqueItems": true,
+          "description": "UI schema files"
+        }
+      },
+      "additionalProperties": false,
+      "description": "UI configuration"
+    },
+    "health": {
+      "type": "object",
+      "properties": {
+        "liveness": {
+          "type": "string",
+          "pattern": "^/.*$",
+          "default": "/health/live",
+          "description": "Liveness probe endpoint"
+        },
+        "readiness": {
+          "type": "string",
+          "pattern": "^/.*$",
+          "default": "/health/ready",
+          "description": "Readiness probe endpoint"
+        },
+        "interval": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 10,
+          "description": "Health check interval in seconds"
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 5,
+          "description": "Health check timeout in seconds"
+        },
+        "deregister_after": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 3600,
+          "default": 60,
+          "description": "Seconds of failed checks before deregistration"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Health check configuration"
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "string",
+          "pattern": "^[0-9]+m?(-[0-9]+m?)?$",
+          "description": "CPU request-limit (e.g., 500m-2000m)"
+        },
+        "memory": {
+          "type": "string",
+          "pattern": "^[0-9]+(Mi|Gi)(-[0-9]+(Mi|Gi))?$",
+          "description": "Memory request-limit (e.g., 512Mi-2Gi)"
+        },
+        "replicas": {
+          "type": "string",
+          "pattern": "^[0-9]+-[0-9]+$",
+          "description": "Min-max replica count (e.g., 2-10)"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Kubernetes resource requirements"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Custom key-value metadata"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]*$"
+      },
+      "uniqueItems": true,
+      "description": "Service tags for filtering"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,57 @@
+services:
+  kong-test:
+    image: kong:3.5
+    container_name: kong-test-metrics
+    environment:
+      # Database-less mode with declarative configuration
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /tmp/kong.yaml
+
+      # Proxy configuration
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_PROXY_LISTEN: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+
+      # DNS resolver for Consul service discovery (disabled for testing)
+      # KONG_DNS_RESOLVER: "consul-server-1:8600"
+      # KONG_DNS_ORDER: "SRV,A,CNAME"
+      # KONG_DNS_STALE_TTL: 60
+
+      # Logging configuration
+      KONG_LOG_LEVEL: info
+
+      # Performance tuning
+      KONG_WORKER_PROCESSES: auto
+      KONG_WORKER_CONNECTIONS: 1024
+
+      # Security
+      KONG_REAL_IP_HEADER: X-Forwarded-For
+      KONG_REAL_IP_RECURSIVE: "on"
+      KONG_TRUSTED_IPS: "0.0.0.0/0,::/0"
+
+      # Plugin configuration
+      KONG_PLUGINS: bundled
+      KONG_PLUGINSERVER_NAMES: ""
+
+    volumes:
+      - ./gateway/kong-simple.yaml:/tmp/kong.yaml:ro
+    ports:
+      - "8030:8000"   # Proxy HTTP (different port to avoid conflict)
+      - "8031:8443"   # Proxy HTTPS (different port to avoid conflict)
+      - "8032:8001"   # Admin API (different port for testing)
+    networks:
+      - venturestrat-network
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: "no"
+
+networks:
+  venturestrat-network:
+    external: true

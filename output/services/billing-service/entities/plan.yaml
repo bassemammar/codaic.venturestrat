@@ -1,0 +1,70 @@
+name: Plan
+service_name: billing-service
+type: entity
+description: "Subscription plan tier definition"
+table_name: vs_plan
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: billing
+natural_key: code
+seed_strategy: file
+
+fields:
+  - name: name
+    type: string
+    max_length: 50
+    nullable: false
+    unique: true
+
+  - name: code
+    type: string
+    max_length: 20
+    nullable: false
+    unique: true
+    enum_values: [free, starter, pro, scale]
+
+  - name: price_monthly
+    type: decimal
+    precision: 8
+    scale: 2
+    nullable: false
+    default: "0.00"
+
+  - name: price_quarterly
+    type: decimal
+    precision: 8
+    scale: 2
+    nullable: true
+
+  - name: price_annually
+    type: decimal
+    precision: 8
+    scale: 2
+    nullable: true
+
+  - name: limits
+    type: json
+    nullable: false
+    description: "Usage limits: {ai_drafts_per_day, emails_per_day, emails_per_month, investors_per_day, investors_per_month, follow_ups_per_month}"
+
+  - name: features
+    type: json
+    nullable: false
+    description: "Feature flags: {show_full_contact_info, advanced_filters, priority_support, custom_integrations, can_download_csv}"
+
+  - name: usage_basis
+    type: string
+    max_length: 10
+    nullable: false
+    enum_values: [daily, monthly]
+    description: "Whether limits are enforced daily (free) or monthly (paid)"
+
+  - name: is_active
+    type: boolean
+    nullable: false
+    default: true
+
+indexes:
+  - columns: [code]
+    name: idx_plan_code

@@ -1,0 +1,127 @@
+manifest_version: 1
+name: legal-service
+version: 1.0.0
+description: Venturestrat legal-service
+depends: []
+provides:
+  apis:
+    rest: /api/v1
+  events:
+  - topic: legal.contact_person.created
+    schema: ContactPerson.Created
+  - topic: legal.contact_person.updated
+    schema: ContactPerson.Updated
+  - topic: legal.contact_person.deleted
+    schema: ContactPerson.Deleted
+  - topic: legal.document_party.created
+    schema: DocumentParty.Created
+  - topic: legal.document_party.updated
+    schema: DocumentParty.Updated
+  - topic: legal.document_party.deleted
+    schema: DocumentParty.Deleted
+  - topic: legal.document_template.created
+    schema: DocumentTemplate.Created
+  - topic: legal.document_template.updated
+    schema: DocumentTemplate.Updated
+  - topic: legal.document_template.deleted
+    schema: DocumentTemplate.Deleted
+  - topic: legal.equity_grant.created
+    schema: EquityGrant.Created
+  - topic: legal.equity_grant.updated
+    schema: EquityGrant.Updated
+  - topic: legal.equity_grant.deleted
+    schema: EquityGrant.Deleted
+  - topic: legal.investment_term.created
+    schema: InvestmentTerm.Created
+  - topic: legal.investment_term.updated
+    schema: InvestmentTerm.Updated
+  - topic: legal.investment_term.deleted
+    schema: InvestmentTerm.Deleted
+  - topic: legal.legal_address.created
+    schema: LegalAddress.Created
+  - topic: legal.legal_address.updated
+    schema: LegalAddress.Updated
+  - topic: legal.legal_address.deleted
+    schema: LegalAddress.Deleted
+  - topic: legal.legal_document.created
+    schema: LegalDocument.Created
+  - topic: legal.legal_document.updated
+    schema: LegalDocument.Updated
+  - topic: legal.legal_document.deleted
+    schema: LegalDocument.Deleted
+  - topic: legal.legal_entity.created
+    schema: LegalEntity.Created
+  - topic: legal.legal_entity.updated
+    schema: LegalEntity.Updated
+  - topic: legal.legal_entity.deleted
+    schema: LegalEntity.Deleted
+  - topic: legal.template_clause.created
+    schema: TemplateClause.Created
+  - topic: legal.template_clause.updated
+    schema: TemplateClause.Updated
+  - topic: legal.template_clause.deleted
+    schema: TemplateClause.Deleted
+  - topic: legal.vesting_schedule.created
+    schema: VestingSchedule.Created
+  - topic: legal.vesting_schedule.updated
+    schema: VestingSchedule.Updated
+  - topic: legal.vesting_schedule.deleted
+    schema: VestingSchedule.Deleted
+health:
+  liveness: /health/live
+  readiness: /health/ready
+  interval: 10
+  timeout: 5
+  failure_threshold: 3
+  success_threshold: 1
+  deregister_after: 60
+resources:
+  cpu:
+    request: 100m
+    limit: 500m
+  memory:
+    request: 128Mi
+    limit: 512Mi
+tags:
+- fastapi
+- development
+metadata:
+  team: platform
+  service_type: fastapi
+  protocol: http
+observability:
+  tier: fast
+  metrics:
+    enabled: true
+    endpoint: /metrics
+    histogram_buckets:
+    - 0.005
+    - 0.01
+    - 0.025
+    - 0.05
+    - 0.1
+    - 0.25
+    - 0.5
+    slo:
+      p95_target_ms: 50
+      p99_target_ms: 100
+  logging:
+    enabled: true
+    level: INFO
+    structured: true
+    correlation_id: true
+  tracing:
+    enabled: true
+    sampling_rate: 1.0
+    otlp_endpoint: http://jaeger:4317
+  consul_tags:
+  - metrics
+testing:
+  markers:
+  - unit
+  - integration
+  coverage_threshold: 80
+  gates:
+  - lint
+  - typecheck
+  timeout: 300

@@ -1,0 +1,3 @@
+# Minimal valid manifest (only required fields)
+name: simple-service
+version: 0.1.0

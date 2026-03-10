@@ -1,0 +1,92 @@
+name: Shortlist
+service_name: crm-service
+type: entity
+description: "User's investor pipeline — tracks shortlisted investors with CRM status"
+table_name: vs_shortlist
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: crm
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Auth user reference"
+
+  - name: investor_id
+    type: uuid
+    nullable: false
+    description: "Cross-service reference to investor-service Investor"
+
+  - name: stage_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_pipeline_stage
+    fk_column: id
+    description: "Pipeline stage reference"
+
+  - name: status
+    type: string
+    max_length: 30
+    nullable: false
+    default: "target"
+    enum_values: [target, contacted, interested, closed]
+    description: "Current pipeline status"
+
+  - name: notes
+    type: text
+    nullable: true
+
+  - name: added_at
+    type: datetime
+    nullable: false
+    description: "When investor was shortlisted"
+
+relationships:
+  - name: stage
+    type: many_to_one
+    target_entity: PipelineStage
+    foreign_key: stage_id
+
+  - name: activities
+    type: one_to_many
+    target_entity: Activity
+    foreign_key: shortlist_id
+    cascade_delete: true
+
+  - name: tags
+    type: one_to_many
+    target_entity: ShortlistTag
+    foreign_key: shortlist_id
+    cascade_delete: true
+
+indexes:
+  - columns: [user_id]
+    name: idx_shortlist_user
+  - columns: [investor_id]
+    name: idx_shortlist_investor
+  - columns: [status]
+    name: idx_shortlist_status
+  - columns: [user_id, investor_id]
+    name: idx_shortlist_unique
+
+lifecycle:
+  field: status
+  initial: target
+  transitions:
+    - from: target
+      to: contacted
+      event: crm.shortlist.contacted
+      description: "Email sent to investor"
+    - from: contacted
+      to: interested
+      event: crm.shortlist.replied
+      description: "Investor replied to email"
+    - from: [target, contacted, interested]
+      to: closed
+      event: crm.shortlist.closed
+      description: "Deal closed or removed"

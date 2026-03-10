@@ -1,0 +1,14 @@
+{
+  "id": "usd_5y_vanilla_swap",
+  "instrument_type": "swap",
+  "currency": "USD",
+  "notional": 10000000,
+  "tenor": "5Y",
+  "fixed_rate": 0.045,
+  "floating_rate_index": "USD-SOFR",
+  "fixed_frequency": "SEMI_ANNUAL",
+  "floating_frequency": "QUARTERLY",
+  "day_count_fixed": "ACT/360",
+  "day_count_floating": "ACT/360",
+  "description": "Standard 5Y USD interest rate swap"
+}

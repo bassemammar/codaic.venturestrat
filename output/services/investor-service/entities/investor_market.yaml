@@ -1,0 +1,45 @@
+name: InvestorMarket
+service_name: investor-service
+type: entity
+description: "Many-to-many junction between investors and markets"
+table_name: vs_investor_market
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: investor
+
+fields:
+  - name: investor_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_investor
+    fk_column: id
+
+  - name: market_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_market
+    fk_column: id
+
+relationships:
+  - name: investor
+    type: many_to_one
+    target_entity: Investor
+    foreign_key: investor_id
+
+  - name: market
+    type: many_to_one
+    target_entity: Market
+    foreign_key: market_id
+
+indexes:
+  - columns: [investor_id]
+    name: idx_inv_market_investor
+  - columns: [market_id]
+    name: idx_inv_market_market
+  - columns: [investor_id, market_id]
+    name: idx_inv_market_unique

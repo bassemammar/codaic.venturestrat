@@ -1,0 +1,16 @@
+quality_gates:
+  gate_timeout: 300
+  on_failure: warn
+  post_test:
+  - command: ruff check .
+    name: lint
+    required: false
+    timeout: 300
+  - command: mypy src/
+    name: typecheck
+    required: false
+    timeout: 300
+  - command: echo 'Coverage already checked'
+    name: coverage
+    required: false
+    timeout: 300

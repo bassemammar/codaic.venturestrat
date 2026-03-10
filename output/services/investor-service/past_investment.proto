@@ -1,0 +1,85 @@
+// PastInvestment Service - gRPC API
+// Portfolio company that an investor has previously invested in
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// PastInvestment Service
+// =============================================================================
+
+service PastInvestmentService {
+  // CRUD operations
+  rpc CreatePastInvestment(CreatePastInvestmentRequest) returns (PastInvestment);
+  rpc GetPastInvestment(GetPastInvestmentRequest) returns (PastInvestment);
+  rpc UpdatePastInvestment(UpdatePastInvestmentRequest) returns (PastInvestment);
+  rpc DeletePastInvestment(DeletePastInvestmentRequest) returns (DeletePastInvestmentResponse);
+
+  // List operations
+  rpc ListPastInvestments(ListPastInvestmentsRequest) returns (ListPastInvestmentsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create PastInvestment
+message CreatePastInvestmentRequest {
+  string title = 1;  // Company name
+}
+
+// Get PastInvestment
+message GetPastInvestmentRequest {
+  string id = 1;  // UUID of the pastinvestment
+}
+
+// Update PastInvestment
+message UpdatePastInvestmentRequest {
+  string id = 1;  // UUID of the pastinvestment
+  optional string title = 2;  // Company name
+}
+
+// Delete PastInvestment
+message DeletePastInvestmentRequest {
+  string id = 1;  // UUID of the pastinvestment
+}
+
+message DeletePastInvestmentResponse {
+  bool success = 1;
+}
+
+// List PastInvestments
+message ListPastInvestmentsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListPastInvestmentsResponse {
+  repeated PastInvestment items = 1;  // List of pastinvestments
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message PastInvestment {
+  string id = 1;  // UUID primary key
+  string title = 2;  // Company name
+  string tenant_id = 3;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}

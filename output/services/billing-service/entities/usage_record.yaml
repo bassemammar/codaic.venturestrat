@@ -1,0 +1,65 @@
+name: UsageRecord
+service_name: billing-service
+type: entity
+description: "Daily usage tracking for subscription limit enforcement"
+table_name: vs_usage_record
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: billing
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+
+  - name: date
+    type: date
+    nullable: false
+    description: "Tracking date"
+
+  - name: month
+    type: integer
+    nullable: false
+    description: "Month number (1-12)"
+
+  - name: year
+    type: integer
+    nullable: false
+
+  - name: ai_drafts_used
+    type: integer
+    nullable: false
+    default: 0
+
+  - name: emails_sent
+    type: integer
+    nullable: false
+    default: 0
+
+  - name: investors_added
+    type: integer
+    nullable: false
+    default: 0
+
+  - name: monthly_emails_sent
+    type: integer
+    nullable: false
+    default: 0
+
+  - name: monthly_investors_added
+    type: integer
+    nullable: false
+    default: 0
+
+  - name: monthly_follow_ups_sent
+    type: integer
+    nullable: false
+    default: 0
+
+indexes:
+  - columns: [user_id, date]
+    name: idx_usage_user_date
+  - columns: [user_id, month, year]
+    name: idx_usage_user_month

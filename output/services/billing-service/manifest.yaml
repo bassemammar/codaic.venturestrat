@@ -1,0 +1,148 @@
+manifest_version: 1
+name: billing-service
+version: 1.0.0
+description: VentureStrat billing-service
+depends: []
+provides:
+  apis:
+    rest: /api/v1
+  events:
+  # --- CRUD events (codegen-generated) ---
+  - topic: billing.plan.created
+    schema: Plan.Created
+  - topic: billing.plan.updated
+    schema: Plan.Updated
+  - topic: billing.plan.deleted
+    schema: Plan.Deleted
+  - topic: billing.subscription.created
+    schema: Subscription.Created
+  - topic: billing.subscription.updated
+    schema: Subscription.Updated
+  - topic: billing.subscription.deleted
+    schema: Subscription.Deleted
+  - topic: billing.usage_record.created
+    schema: UsageRecord.Created
+  - topic: billing.usage_record.updated
+    schema: UsageRecord.Updated
+  - topic: billing.usage_record.deleted
+    schema: UsageRecord.Deleted
+
+  # --- Domain events (custom business logic) ---
+  - topic: billing.subscription.activated
+    schema: Subscription.Activated
+    description: >
+      Emitted when a new subscription is activated via Stripe checkout
+      (checkout.session.completed webhook). Contains subscription details
+      and the associated plan.
+    payload:
+      subscription_id: {type: string, format: uuid}
+      user_id: {type: string}
+      plan_id: {type: string, format: uuid}
+      stripe_subscription_id: {type: string}
+      stripe_customer_id: {type: string}
+      billing_period: {type: string, enum: [monthly, quarterly, annually]}
+      status: {type: string}
+      activated_at: {type: string, format: date-time}
+
+  - topic: billing.subscription.plan_changed
+    schema: Subscription.PlanChanged
+    description: >
+      Emitted when a subscription plan is upgraded or downgraded via the
+      change-plan endpoint. Contains old and new plan references.
+    payload:
+      subscription_id: {type: string, format: uuid}
+      user_id: {type: string}
+      old_plan_id: {type: string, format: uuid}
+      new_plan_id: {type: string, format: uuid}
+      new_plan_name: {type: string}
+      billing_period: {type: string}
+      changed_at: {type: string, format: date-time}
+
+  - topic: billing.subscription.cancelled
+    schema: Subscription.Cancelled
+    description: >
+      Emitted when a subscription is cancelled — either via the Stripe
+      customer.subscription.deleted webhook or the cancel endpoint.
+    payload:
+      subscription_id: {type: string, format: uuid}
+      user_id: {type: string}
+      stripe_subscription_id: {type: string}
+      cancel_immediately: {type: boolean}
+      cancelled_at: {type: string, format: date-time}
+
+  - topic: billing.usage.limit_reached
+    schema: Usage.LimitReached
+    description: >
+      Emitted when a validate-usage check determines the user has reached
+      or exceeded their plan limit for a given usage type.
+    payload:
+      user_id: {type: string}
+      usage_type: {type: string, enum: [ai_drafts, emails, investors, follow_ups]}
+      current: {type: integer}
+      limit: {type: integer}
+      plan: {type: string}
+      checked_at: {type: string, format: date-time}
+
+consumes:
+  events: []
+
+health:
+  liveness: /health/live
+  readiness: /health/ready
+  interval: 10
+  timeout: 5
+  failure_threshold: 3
+  success_threshold: 1
+  deregister_after: 60
+resources:
+  cpu:
+    request: 100m
+    limit: 500m
+  memory:
+    request: 128Mi
+    limit: 512Mi
+tags:
+- fastapi
+- development
+- billing
+- stripe
+metadata:
+  team: platform
+  service_type: fastapi
+  protocol: http
+observability:
+  tier: fast
+  metrics:
+    enabled: true
+    endpoint: /metrics
+    histogram_buckets:
+    - 0.005
+    - 0.01
+    - 0.025
+    - 0.05
+    - 0.1
+    - 0.25
+    - 0.5
+    slo:
+      p95_target_ms: 50
+      p99_target_ms: 100
+  logging:
+    enabled: true
+    level: INFO
+    structured: true
+    correlation_id: true
+  tracing:
+    enabled: true
+    sampling_rate: 1.0
+    otlp_endpoint: http://jaeger:4317
+  consul_tags:
+  - metrics
+testing:
+  markers:
+  - unit
+  - integration
+  coverage_threshold: 80
+  gates:
+  - lint
+  - typecheck
+  timeout: 300

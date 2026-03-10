@@ -1,0 +1,130 @@
+name: LegalDocument
+service_name: legal-service
+type: entity
+description: "Generated legal document with full lifecycle tracking, template reference, and party links"
+table_name: vs_legal_document
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Auth user who created this document"
+
+  - name: template_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_document_template
+    fk_column: id
+    description: "Template used to generate this document"
+
+  - name: investor_id
+    type: uuid
+    nullable: true
+    description: "Cross-service reference to investor-service Investor"
+
+  - name: document_type
+    type: string
+    max_length: 50
+    nullable: false
+    enum_values: [mutual_nda, one_way_nda, founders_agreement, employment_agreement, safe_agreement, certificate_of_incorporation, master_services_agreement]
+
+  - name: title
+    type: string
+    max_length: 255
+    nullable: false
+
+  - name: status
+    type: string
+    max_length: 20
+    nullable: false
+    default: "draft"
+    enum_values: [draft, generated, reviewed, signed, archived]
+
+  - name: configuration
+    type: json
+    nullable: false
+    default: "{}"
+    description: "JSONB storing all form answers and clause variant selections"
+
+  - name: content_markdown
+    type: text
+    nullable: true
+    description: "Generated markdown content"
+
+  - name: content_html
+    type: text
+    nullable: true
+    description: "Rendered HTML for preview"
+
+  - name: file_path_docx
+    type: string
+    max_length: 500
+    nullable: true
+
+  - name: file_path_pdf
+    type: string
+    max_length: 500
+    nullable: true
+
+  - name: version
+    type: integer
+    nullable: false
+    default: 1
+
+  - name: generated_at
+    type: datetime
+    nullable: true
+
+relationships:
+  - name: template
+    type: many_to_one
+    target_entity: DocumentTemplate
+    foreign_key: template_id
+
+  - name: parties
+    type: one_to_many
+    target_entity: DocumentParty
+    foreign_key: legal_document_id
+    cascade_delete: true
+
+indexes:
+  - columns: [user_id]
+    name: idx_legal_document_user
+  - columns: [document_type]
+    name: idx_legal_document_type
+  - columns: [status]
+    name: idx_legal_document_status
+  - columns: [investor_id]
+    name: idx_legal_document_investor
+  - columns: [user_id, document_type]
+    name: idx_legal_document_user_type
+  - columns: [generated_at]
+    name: idx_legal_document_generated
+
+lifecycle:
+  field: status
+  initial: draft
+  transitions:
+    - from: draft
+      to: generated
+      event: legal.document.generated
+      description: "Document generated from template"
+    - from: generated
+      to: reviewed
+      event: legal.document.reviewed
+      description: "Document reviewed and approved"
+    - from: [generated, reviewed]
+      to: signed
+      event: legal.document.signed
+      description: "Document signed by all parties"
+    - from: [draft, generated, reviewed, signed]
+      to: archived
+      event: legal.document.archived
+      description: "Document archived"

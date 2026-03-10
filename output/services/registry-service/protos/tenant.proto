@@ -1,0 +1,241 @@
+// VentureStrat Tenant Service - gRPC API
+// Multi-tenant organization management
+
+syntax = "proto3";
+
+package venturestrat.registry.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/registry/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// Tenant Service
+// =============================================================================
+
+service TenantService {
+  // CRUD operations
+  rpc CreateTenant(CreateTenantRequest) returns (Tenant);
+  rpc GetTenant(GetTenantRequest) returns (Tenant);
+  rpc GetTenantBySlug(GetTenantBySlugRequest) returns (Tenant);
+  rpc UpdateTenant(UpdateTenantRequest) returns (Tenant);
+  rpc DeleteTenant(DeleteTenantRequest) returns (Tenant);
+
+  // List operations
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse);
+
+  // Status management
+  rpc SuspendTenant(SuspendTenantRequest) returns (Tenant);
+  rpc ResumeTenant(ResumeTenantRequest) returns (Tenant);
+
+  // Data export (GDPR compliance)
+  rpc ExportTenantData(ExportTenantDataRequest) returns (ExportTenantDataResponse);
+  rpc GetExportStatus(GetExportStatusRequest) returns (ExportStatusResponse);
+
+  // Quota management
+  rpc GetTenantQuotas(GetTenantQuotasRequest) returns (TenantQuotasResponse);
+  rpc UpdateTenantQuotas(UpdateTenantQuotasRequest) returns (TenantQuotasResponse);
+
+  // Streaming operations
+  rpc WatchTenantChanges(WatchTenantChangesRequest) returns (stream TenantChangeEvent);
+}
+
+// =============================================================================
+// Health Service (Standard gRPC Health Checking)
+// =============================================================================
+
+service Health {
+  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create Tenant
+message CreateTenantRequest {
+  string slug = 1;                    // URL-friendly identifier (required)
+  string name = 2;                    // Display name (required)
+  map<string, string> config = 3;     // Configuration settings
+  string admin_email = 4;             // Initial admin user email
+}
+
+// Get Tenant
+message GetTenantRequest {
+  string tenant_id = 1;               // UUID of the tenant
+}
+
+message GetTenantBySlugRequest {
+  string slug = 1;                    // Slug of the tenant
+}
+
+// Update Tenant
+message UpdateTenantRequest {
+  string tenant_id = 1;               // UUID of the tenant
+  optional string name = 2;           // Display name
+  map<string, string> config = 3;  // Configuration updates
+}
+
+// Delete Tenant (soft delete)
+message DeleteTenantRequest {
+  string tenant_id = 1;               // UUID of the tenant
+  string reason = 2;                  // Reason for deletion (required)
+}
+
+// List Tenants
+message ListTenantsRequest {
+  int32 page_size = 1;                // Results per page (default: 50, max: 100)
+  string page_token = 2;              // Pagination token
+  optional string status = 3;         // Filter by status (active, suspended, deleted)
+  optional string search = 4;         // Search by name or slug
+}
+
+message ListTenantsResponse {
+  repeated Tenant tenants = 1;        // List of tenants
+  string next_page_token = 2;         // Next page token
+  int32 total_count = 3;              // Total count (if available)
+}
+
+// Suspend Tenant
+message SuspendTenantRequest {
+  string tenant_id = 1;               // UUID of the tenant
+  string reason = 2;                  // Reason for suspension (required)
+}
+
+// Resume Tenant
+message ResumeTenantRequest {
+  string tenant_id = 1;               // UUID of the tenant
+}
+
+// Export Tenant Data
+message ExportTenantDataRequest {
+  string tenant_id = 1;               // UUID of the tenant
+  repeated string data_types = 2;     // Types of data to export (optional, empty = all)
+  string format = 3;                  // Export format (json, csv, etc.)
+}
+
+message ExportTenantDataResponse {
+  string export_id = 1;               // UUID of the export job
+  string status = 2;                  // in_progress, completed, failed
+  google.protobuf.Timestamp estimated_completion = 3;
+}
+
+message GetExportStatusRequest {
+  string tenant_id = 1;               // UUID of the tenant
+  string export_id = 2;               // UUID of the export job
+}
+
+message ExportStatusResponse {
+  string export_id = 1;               // UUID of the export job
+  string status = 2;                  // in_progress, completed, failed
+  optional string download_url = 3;   // Available when completed
+  optional google.protobuf.Timestamp expires_at = 4;  // Download expiration
+  optional string error_message = 5;  // Available when failed
+}
+
+// Quota Management
+message GetTenantQuotasRequest {
+  string tenant_id = 1;               // UUID of the tenant
+}
+
+message UpdateTenantQuotasRequest {
+  string tenant_id = 1;               // UUID of the tenant
+  map<string, int64> quotas = 2;      // Quota limits to update
+}
+
+message TenantQuotasResponse {
+  string tenant_id = 1;               // UUID of the tenant
+  map<string, QuotaInfo> quotas = 2;  // Current quota status
+}
+
+message QuotaInfo {
+  int64 limit = 1;                    // Quota limit
+  int64 current = 2;                  // Current usage
+  double usage_percentage = 3;        // Usage percentage
+}
+
+// Streaming
+message WatchTenantChangesRequest {
+  optional string tenant_id = 1;      // Specific tenant (empty = all tenants)
+  string start_token = 2;             // Start from this change token
+}
+
+message TenantChangeEvent {
+  enum EventType {
+    UNKNOWN = 0;
+    CREATED = 1;
+    UPDATED = 2;
+    SUSPENDED = 3;
+    RESUMED = 4;
+    DELETED = 5;
+  }
+  EventType event_type = 1;
+  Tenant tenant = 2;
+  string change_token = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  string changed_by = 5;              // User ID who made the change
+  string reason = 6;                  // Reason for status changes
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message Tenant {
+  // Identifiers
+  string id = 1;                      // UUID primary key
+  string slug = 2;                    // URL-friendly identifier (unique)
+
+  // Display
+  string name = 3;                    // Display name
+
+  // Status
+  TenantStatus status = 4;            // Current status
+
+  // Configuration
+  map<string, string> config = 5;     // Tenant configuration (theme, quotas, settings)
+
+  // External integrations
+  optional string keycloak_org_id = 6; // Keycloak organization ID
+
+  // Timestamps
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+  optional google.protobuf.Timestamp deleted_at = 9;  // Soft delete timestamp
+
+  // Metadata
+  string created_by = 10;             // User ID who created the tenant
+  optional string updated_by = 11;    // User ID who last updated the tenant
+}
+
+enum TenantStatus {
+  TENANT_STATUS_UNKNOWN = 0;
+  TENANT_STATUS_ACTIVE = 1;
+  TENANT_STATUS_SUSPENDED = 2;
+  TENANT_STATUS_DELETED = 3;
+}
+
+// =============================================================================
+// Health Check Messages (Standard gRPC Health Protocol)
+// =============================================================================
+
+message HealthCheckRequest {
+  string service = 1;
+}
+
+message HealthCheckResponse {
+  enum ServingStatus {
+    UNKNOWN = 0;
+    SERVING = 1;
+    NOT_SERVING = 2;
+    SERVICE_UNKNOWN = 3;
+  }
+  ServingStatus status = 1;
+}

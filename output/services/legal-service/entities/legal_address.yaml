@@ -1,0 +1,53 @@
+name: LegalAddress
+service_name: legal-service
+type: entity
+description: "Physical address for legal entities and persons with jurisdiction classification"
+table_name: vs_legal_address
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: address_line_1
+    type: string
+    max_length: 100
+    nullable: false
+
+  - name: address_line_2
+    type: string
+    max_length: 100
+    nullable: true
+
+  - name: city
+    type: string
+    max_length: 50
+    nullable: false
+
+  - name: state_province
+    type: string
+    max_length: 50
+    nullable: true
+
+  - name: postal_code
+    type: string
+    max_length: 20
+    nullable: false
+
+  - name: country
+    type: string
+    max_length: 2
+    nullable: false
+    description: "ISO 3166-1 alpha-2 country code"
+
+  - name: jurisdiction
+    type: string
+    max_length: 30
+    nullable: false
+    enum_values: [england_wales, scotland, northern_ireland, delaware, california, new_york, difc, uae_mainland, ksa, egypt]
+
+indexes:
+  - columns: [country]
+    name: idx_legal_address_country
+  - columns: [jurisdiction]
+    name: idx_legal_address_jurisdiction

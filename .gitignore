@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Node
+node_modules/
+.next/
+.nuxt/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Build artifacts
+output/services/*/frontend/dist/
+output/services/venturestrat-portal/frontend/dist/
+
+# Docker data volumes
+output/infrastructure/postgres/data/
+output/infrastructure/redis/data/
+
+# Logs
+*.log
+logs/
+
+# Vite
+*.local
+
+# Codaic internals (live in parent codaic repo)
+output/cli/
+output/codegen/
+output/packages/
+output/observability/
+output/sdk/

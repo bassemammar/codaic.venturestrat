@@ -1,0 +1,240 @@
+_format_version: "3.0"
+_transform: true
+
+# =============================================================================
+# Kong Gateway Configuration - Task 6.4 Test Version
+# Simplified configuration pointing directly to mock registry service for testing
+# =============================================================================
+
+# =============================================================================
+# Upstreams - Direct IP addresses for testing
+# =============================================================================
+upstreams:
+  - name: mock-registry-upstream
+    algorithm: round-robin
+    slots: 1000
+    hash_on: none
+    hash_fallback: none
+    targets:
+      # Direct IP address to mock registry service - REST endpoint
+      - target: 172.19.0.2:8080
+        weight: 100
+  # Separate upstream for gRPC service
+  - name: mock-registry-grpc-upstream
+    algorithm: round-robin
+    slots: 1000
+    hash_on: none
+    hash_fallback: none
+    targets:
+      # Direct IP address to mock registry service - gRPC endpoint
+      - target: 172.19.0.2:50051
+        weight: 100
+
+# =============================================================================
+# Services - Backend service definitions
+# =============================================================================
+services:
+  - name: mock-registry-service
+    host: mock-registry-upstream
+    port: 80
+    protocol: http
+    connect_timeout: 5000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 3
+    routes:
+      - name: registry-rest
+        paths:
+          - /api/v1/registry
+        strip_path: true
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 100
+
+      - name: headers-test
+        paths:
+          - /health/headers
+        strip_path: false
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 200
+
+  # gRPC service for registry (for gRPC-Web clients)
+  - name: registry-grpc-service
+    host: mock-registry-grpc-upstream  # Dedicated gRPC upstream
+    port: 80  # Kong upstream port
+    protocol: grpc
+    connect_timeout: 5000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 3
+    routes:
+      - name: registry-grpc-web
+        paths:
+          - /grpc/v1/registry
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 300
+    plugins:
+      - name: grpc-web
+        config:
+          proto: /kong/protos/registry.proto
+
+# =============================================================================
+# Plugins - Global configuration
+# =============================================================================
+plugins:
+  # API Key Authentication (Applied globally)
+  - name: key-auth
+    config:
+      key_names:
+        - X-API-Key
+        - apikey
+      key_in_header: true
+      key_in_query: true
+      hide_credentials: true
+      run_on_preflight: false
+
+  # Rate Limiting (Global default)
+  - name: rate-limiting
+    config:
+      minute: 1000
+      hour: 10000
+      policy: local
+      fault_tolerant: true
+      hide_client_headers: false
+
+  # Request/Response Logging
+  - name: file-log
+    config:
+      path: /dev/stdout
+      reopen: true
+
+  # Prometheus Metrics
+  - name: prometheus
+    config:
+      per_consumer: true
+      status_code_metrics: true
+      latency_metrics: true
+      bandwidth_metrics: true
+      upstream_health_metrics: true
+
+  # Correlation ID for request tracing
+  - name: correlation-id
+    config:
+      header_name: X-Correlation-ID
+      generator: uuid
+      echo_downstream: true
+
+  # Tenant Header Plugin (extracts tenant_id from JWT claims and adds X-Tenant-ID header)
+  # Must run after JWT plugin to access jwt_claims context
+  - name: tenant-header
+    config:
+      exclude_paths:
+        - "/health"
+        - "/metrics"
+        - "/status"
+      debug_header: false
+      emit_metrics: true
+      header_name: "X-Tenant-ID"
+      strict_mode: false  # More lenient in test environment
+      log_level: "debug"  # More verbose logging for testing
+
+  # Global request transformer to add consumer information to all upstream requests
+  - name: request-transformer
+    config:
+      add:
+        headers:
+          - "X-Consumer-Username:{{consumer.username}}"
+          - "X-Consumer-ID:{{consumer.id}}"
+
+# =============================================================================
+# Consumers (API Keys) - Test consumers for development
+# =============================================================================
+consumers:
+  - username: default-consumer
+    custom_id: default-dev-consumer
+    tags:
+      - dev
+      - default
+    keyauth_credentials:
+      - key: dev-api-key-12345
+        tags:
+          - dev
+
+  - username: test-consumer
+    custom_id: test-integration-consumer
+    tags:
+      - test
+      - integration
+    keyauth_credentials:
+      - key: test-api-key-67890
+        tags:
+          - test
+
+  # Free tier consumer with limited rate limits
+  - username: free-tier-consumer
+    custom_id: free-tier
+    tags:
+      - free-tier
+      - external
+    keyauth_credentials:
+      - key: free-api-key-11111
+        tags:
+          - free-tier
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+          day: 2500
+          policy: local
+          fault_tolerant: true
+          hide_client_headers: false
+
+  # Standard tier consumer
+  - username: standard-tier-consumer
+    custom_id: standard-tier
+    tags:
+      - standard-tier
+      - external
+    keyauth_credentials:
+      - key: standard-api-key-22222
+        tags:
+          - standard-tier
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 1000
+          hour: 10000
+          day: 50000
+          policy: local
+          fault_tolerant: true
+          hide_client_headers: false
+
+  # Premium tier consumer
+  - username: premium-tier-consumer
+    custom_id: premium-tier
+    tags:
+      - premium-tier
+      - external
+      - priority
+    keyauth_credentials:
+      - key: premium-api-key-33333
+        tags:
+          - premium-tier
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 5000
+          hour: 100000
+          day: 500000
+          policy: local
+          fault_tolerant: true
+          hide_client_headers: false

@@ -1,0 +1,98 @@
+// Role Service - gRPC API
+// Authorization role with JSON permissions
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// Role Service
+// =============================================================================
+
+service RoleService {
+  // CRUD operations
+  rpc CreateRole(CreateRoleRequest) returns (Role);
+  rpc GetRole(GetRoleRequest) returns (Role);
+  rpc UpdateRole(UpdateRoleRequest) returns (Role);
+  rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse);
+
+  // List operations
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create Role
+message CreateRoleRequest {
+  string name = 1;  // Human-readable role name
+  string code = 2;  // Unique role code (e.g. admin, trader, viewer)
+  optional string description = 3;  // Role description
+  optional string permissions = 4;  // JSON array of permission codes granted to this role
+  bool is_system = 5;  // Whether this is a built-in system role
+}
+
+// Get Role
+message GetRoleRequest {
+  string id = 1;  // UUID of the role
+}
+
+// Update Role
+message UpdateRoleRequest {
+  string id = 1;  // UUID of the role
+  optional string name = 2;  // Human-readable role name
+  optional string code = 3;  // Unique role code (e.g. admin, trader, viewer)
+  optional string description = 4;  // Role description
+  optional string permissions = 5;  // JSON array of permission codes granted to this role
+  optional bool is_system = 6;  // Whether this is a built-in system role
+}
+
+// Delete Role
+message DeleteRoleRequest {
+  string id = 1;  // UUID of the role
+}
+
+message DeleteRoleResponse {
+  bool success = 1;
+}
+
+// List Roles
+message ListRolesRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListRolesResponse {
+  repeated Role items = 1;  // List of roles
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message Role {
+  string id = 1;  // UUID primary key
+  string name = 2;  // Human-readable role name
+  string code = 3;  // Unique role code (e.g. admin, trader, viewer)
+  optional string description = 4;  // Role description
+  optional string permissions = 5;  // JSON array of permission codes granted to this role
+  bool is_system = 6;  // Whether this is a built-in system role
+  string tenant_id = 7;  // Owning tenant
+  string tenant_id = 8;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}

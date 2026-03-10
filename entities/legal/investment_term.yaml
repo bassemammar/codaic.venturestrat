@@ -1,0 +1,94 @@
+name: InvestmentTerm
+service_name: legal-service
+type: entity
+description: "SAFE or priced round investment terms linked to a legal entity and investor person"
+table_name: vs_investment_term
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: legal_entity_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_legal_entity
+    fk_column: id
+    description: "Company receiving the investment"
+
+  - name: investor_person_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_contact_person
+    fk_column: id
+    description: "Person making the investment"
+
+  - name: investor_id
+    type: uuid
+    nullable: true
+    description: "Cross-service reference to investor-service Investor"
+
+  - name: investment_amount
+    type: decimal
+    precision: 15
+    scale: 2
+    nullable: false
+    description: "Investment amount (must be > 0)"
+
+  - name: currency
+    type: string
+    max_length: 3
+    nullable: false
+    default: "USD"
+    enum_values: [GBP, USD, EUR, AED, SAR]
+
+  - name: valuation_cap
+    type: decimal
+    precision: 15
+    scale: 2
+    nullable: true
+    description: "SAFE valuation cap (null for uncapped)"
+
+  - name: discount_percentage
+    type: decimal
+    precision: 4
+    scale: 2
+    nullable: true
+    description: "Discount percentage 0-30 (null if no discount)"
+
+  - name: investment_date
+    type: date
+    nullable: false
+
+  - name: pro_rata_rights
+    type: boolean
+    nullable: false
+    default: false
+
+  - name: source_document_id
+    type: uuid
+    nullable: true
+    description: "Reference to LegalDocument that defines these terms"
+
+relationships:
+  - name: legal_entity
+    type: many_to_one
+    target_entity: LegalEntity
+    foreign_key: legal_entity_id
+
+  - name: investor_person
+    type: many_to_one
+    target_entity: ContactPerson
+    foreign_key: investor_person_id
+
+indexes:
+  - columns: [legal_entity_id]
+    name: idx_investment_term_entity
+  - columns: [investor_person_id]
+    name: idx_investment_term_investor
+  - columns: [investor_id]
+    name: idx_investment_term_ext_investor

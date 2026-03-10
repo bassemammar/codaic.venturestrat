@@ -1,0 +1,160 @@
+name: Message
+service_name: outreach-service
+type: entity
+description: "Email message — draft, scheduled, sent, or received reply"
+table_name: vs_message
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: outreach
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+
+  - name: investor_id
+    type: uuid
+    nullable: true
+    description: "Cross-service reference to investor-service Investor"
+
+  - name: email_account_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_email_account
+    fk_column: id
+
+  - name: status
+    type: string
+    max_length: 20
+    nullable: false
+    default: "draft"
+    enum_values: [draft, scheduled, sending, sent, failed, answered]
+
+  - name: to_addresses
+    type: json
+    nullable: false
+    description: "Recipient email addresses array"
+
+  - name: cc_addresses
+    type: json
+    nullable: false
+    default: "[]"
+
+  - name: subject
+    type: string
+    max_length: 500
+    nullable: false
+
+  - name: from_address
+    type: string
+    max_length: 255
+    nullable: false
+
+  - name: body
+    type: text
+    nullable: false
+    description: "HTML email body"
+
+  - name: attachments
+    type: json
+    nullable: false
+    default: "[]"
+    description: "Array of {key, name, size, type} for S3 attachments"
+
+  - name: thread_id
+    type: string
+    max_length: 200
+    nullable: true
+    description: "Gmail thread ID for conversation threading"
+
+  - name: provider_message_id
+    type: string
+    max_length: 500
+    nullable: true
+    description: "Message-ID header from email provider"
+
+  - name: provider_references
+    type: text
+    nullable: true
+    description: "References header for email threading"
+
+  - name: previous_message_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_message
+    fk_column: id
+    description: "Self-referential FK for reply threading"
+
+  - name: scheduled_for
+    type: datetime
+    nullable: true
+    description: "When to send if scheduled"
+
+  - name: job_id
+    type: string
+    max_length: 100
+    nullable: true
+    description: "Kafka event reference for scheduled sends"
+
+relationships:
+  - name: email_account
+    type: many_to_one
+    target_entity: EmailAccount
+    foreign_key: email_account_id
+
+  - name: previous_message
+    type: many_to_one
+    target_entity: Message
+    foreign_key: previous_message_id
+
+  - name: replies
+    type: one_to_many
+    target_entity: Message
+    foreign_key: previous_message_id
+
+indexes:
+  - columns: [user_id, status]
+    name: idx_message_user_status
+  - columns: [investor_id]
+    name: idx_message_investor
+  - columns: [thread_id]
+    name: idx_message_thread
+  - columns: [scheduled_for]
+    name: idx_message_scheduled
+  - columns: [previous_message_id]
+    name: idx_message_prev
+
+lifecycle:
+  field: status
+  initial: draft
+  transitions:
+    - from: draft
+      to: scheduled
+      event: outreach.message.scheduled
+      description: "User scheduled message for future send"
+    - from: draft
+      to: sending
+      event: outreach.message.sending
+      description: "Direct send initiated"
+    - from: scheduled
+      to: sending
+      event: outreach.message.trigger_send
+      description: "Scheduled time reached, sending"
+    - from: sending
+      to: sent
+      event: outreach.message.sent
+      description: "Email successfully sent via provider"
+    - from: sending
+      to: failed
+      event: outreach.message.failed
+      description: "Send failed after retries"
+    - from: sent
+      to: answered
+      event: outreach.message.replied
+      description: "Reply received from investor"

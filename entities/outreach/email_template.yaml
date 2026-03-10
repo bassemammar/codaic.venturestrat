@@ -1,0 +1,46 @@
+name: EmailTemplate
+service_name: outreach-service
+type: entity
+description: "Reusable email template for outreach and lifecycle emails"
+table_name: vs_email_template
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: outreach
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: true
+    description: "Owner user ID, null for system templates"
+
+  - name: name
+    type: string
+    max_length: 200
+    nullable: false
+
+  - name: subject
+    type: string
+    max_length: 500
+    nullable: false
+
+  - name: body
+    type: text
+    nullable: false
+    description: "HTML template body"
+
+  - name: category
+    type: string
+    max_length: 50
+    nullable: false
+    enum_values: [outreach, follow_up, lifecycle, system]
+
+  - name: is_active
+    type: boolean
+    nullable: false
+    default: true
+
+indexes:
+  - columns: [user_id, category]
+    name: idx_email_template_user_cat

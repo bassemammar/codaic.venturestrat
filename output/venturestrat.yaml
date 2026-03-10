@@ -1,0 +1,44 @@
+# VentureStrat Platform Configuration
+version: "1.0"
+
+infrastructure:
+  compose_file: docker-compose.infra.yaml
+  services:
+    postgres:
+      port: 15436
+      user: venturestrat
+      password: venturestrat_dev_password
+    redis:
+      port: 16379
+    consul:
+      http: 8500
+      dns: 8600
+    kafka:
+      internal: 29092
+      external: 19092
+
+services:
+  base_port: 8059
+  port_increment: 10
+
+templates:
+  default_type: fastapi
+  include_sdk: false
+  include_tests: true
+  registry_integration: false
+
+codegen:
+  outputs:
+    python_grpc: false
+    pydantic_models: true
+    typescript_types: true
+    sdk_client: false
+  output_dirs:
+    models: "src/{service}/models/"
+    typescript: "frontend/src/types/"
+
+testing:
+  default_markers: ["unit"]
+  quality_gates: ["lint", "typecheck"]
+  coverage_threshold: 90
+  on_failure: warn

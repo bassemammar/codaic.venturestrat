@@ -1,0 +1,84 @@
+name: User
+domain: auth
+service_name: auth-service
+type: entity
+description: System user with authentication credentials
+table_name: aut_user
+schema_name: auth
+generate_id: true
+generate_timestamps: true
+soft_delete: true
+fields:
+- name: username
+  type: string
+  max_length: 100
+  nullable: false
+  unique: true
+  indexed: true
+  description: Unique login username
+
+- name: email
+  type: string
+  max_length: 255
+  nullable: false
+  unique: true
+  indexed: true
+  description: User email address
+
+- name: hashed_password
+  type: string
+  max_length: 255
+  nullable: false
+  description: Bcrypt hashed password
+
+- name: first_name
+  type: string
+  max_length: 100
+  nullable: true
+  description: User first name
+
+- name: last_name
+  type: string
+  max_length: 100
+  nullable: true
+  description: User last name
+
+- name: is_active
+  type: boolean
+  nullable: false
+  default: true
+  description: Whether user account is active
+
+- name: last_login
+  type: datetime
+  nullable: true
+  description: Timestamp of last successful login
+
+- name: failed_login_count
+  type: integer
+  nullable: false
+  default: 0
+  description: Number of consecutive failed login attempts
+
+- name: locked_until
+  type: datetime
+  nullable: true
+  description: Account locked until this timestamp
+
+- name: default_tenant_id
+  type: uuid
+  nullable: true
+  description: Default tenant for this user
+
+- name: tenant_id
+  type: uuid
+  nullable: false
+  description: Owning tenant
+
+indexes:
+- name: idx_aut_user_tenant_username
+  columns: [tenant_id, username]
+  unique: true
+- name: idx_aut_user_tenant_email
+  columns: [tenant_id, email]
+  unique: true

@@ -1,0 +1,88 @@
+// ShortlistTag Service - gRPC API
+// Many-to-many junction between shortlists and tags
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// ShortlistTag Service
+// =============================================================================
+
+service ShortlistTagService {
+  // CRUD operations
+  rpc CreateShortlistTag(CreateShortlistTagRequest) returns (ShortlistTag);
+  rpc GetShortlistTag(GetShortlistTagRequest) returns (ShortlistTag);
+  rpc UpdateShortlistTag(UpdateShortlistTagRequest) returns (ShortlistTag);
+  rpc DeleteShortlistTag(DeleteShortlistTagRequest) returns (DeleteShortlistTagResponse);
+
+  // List operations
+  rpc ListShortlistTags(ListShortlistTagsRequest) returns (ListShortlistTagsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create ShortlistTag
+message CreateShortlistTagRequest {
+  string shortlist_id = 1;
+  string tag_id = 2;
+}
+
+// Get ShortlistTag
+message GetShortlistTagRequest {
+  string id = 1;  // UUID of the shortlisttag
+}
+
+// Update ShortlistTag
+message UpdateShortlistTagRequest {
+  string id = 1;  // UUID of the shortlisttag
+  optional string shortlist_id = 2;
+  optional string tag_id = 3;
+}
+
+// Delete ShortlistTag
+message DeleteShortlistTagRequest {
+  string id = 1;  // UUID of the shortlisttag
+}
+
+message DeleteShortlistTagResponse {
+  bool success = 1;
+}
+
+// List ShortlistTags
+message ListShortlistTagsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListShortlistTagsResponse {
+  repeated ShortlistTag items = 1;  // List of shortlisttags
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message ShortlistTag {
+  string id = 1;  // UUID primary key
+  string shortlist_id = 2;
+  string tag_id = 3;
+  string tenant_id = 4;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}

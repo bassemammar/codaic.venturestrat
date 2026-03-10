@@ -1,0 +1,479 @@
+_format_version: "3.0"
+_transform: true
+
+# =============================================================================
+# Kong Gateway Configuration - Wave 3: Consul Service Discovery
+# =============================================================================
+#
+# This configuration implements Wave 3 of the API Gateway specification:
+# - Consul DNS integration for dynamic service discovery
+# - Health-aware routing to services registered in Consul
+# - registry-service.service.consul target for dynamic discovery
+# - Kong DNS resolver configured to use consul-server-1:8600
+#
+# Previous Waves:
+# - Wave 1: Basic routing with direct container naming
+# - Wave 2: Consul DNS configuration in docker-compose
+#
+# =============================================================================
+
+# =============================================================================
+# Upstreams - Service targets using Consul DNS for dynamic discovery
+# =============================================================================
+upstreams:
+  - name: registry-service.upstream
+    algorithm: round-robin
+    healthchecks:
+      active:
+        type: http
+        http_path: /health/ready
+        timeout: 5
+        concurrency: 3
+        https_verify_certificate: false
+        healthy:
+          interval: 10
+          successes: 3
+          http_statuses: [200, 302]
+        unhealthy:
+          interval: 10
+          http_failures: 3
+          timeouts: 5
+          tcp_failures: 3
+          http_statuses: [429, 500, 502, 503, 504]
+      passive:
+        type: http
+        healthy:
+          http_statuses: [200, 201, 202, 204, 301, 302, 303, 304]
+          successes: 3
+        unhealthy:
+          http_statuses: [429, 500, 502, 503, 504, 505]
+          tcp_failures: 3
+          timeouts: 3
+          http_failures: 3
+    slots: 1000
+    hash_on: none
+    hash_fallback: none
+    targets:
+      # Consul DNS target for registry-service
+      - target: registry-service.service.consul:8080
+        weight: 100
+        tags:
+          - registry
+          - rest
+          - primary
+
+# =============================================================================
+# Services - Backend service definitions
+# =============================================================================
+services:
+  - name: registry-service
+    host: registry-service.upstream
+    port: 80
+    protocol: http
+    connect_timeout: 5000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 3
+    routes:
+      - name: registry-rest
+        paths:
+          - /api/v1/registry
+        strip_path: true
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 100
+
+  # gRPC service for registry (Wave 13: Enhanced gRPC-Web configuration)
+  - name: registry-grpc-service
+    host: registry-service.service.consul
+    port: 50051
+    protocol: grpc
+    connect_timeout: 5000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 3
+    routes:
+      - name: registry-grpc-web
+        paths:
+          - /grpc/v1/registry
+        strip_path: true
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 100
+    tags:
+      - grpc
+      - registry
+      - transcoding
+
+  # Health check service (Gateway health endpoint)
+  - name: health-service
+    url: http://health-service.service.consul:8003
+    connect_timeout: 5000
+    write_timeout: 10000
+    read_timeout: 10000
+    retries: 1
+    routes:
+      - name: health-check
+        paths:
+          - /health
+        strip_path: false
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 200  # Higher priority than service routes
+
+  # JWT issuer service (For JWT token issuance)
+  - name: jwt-issuer-service
+    url: http://jwt-issuer.service.consul:8000
+    connect_timeout: 5000
+    write_timeout: 10000
+    read_timeout: 10000
+    retries: 1
+    routes:
+      - name: jwt-token-route
+        paths:
+          - /api/v1/auth/token
+        strip_path: true
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 150  # Higher priority than generic service routes
+    plugins:
+      # JWT issuer should be accessible without authentication for services to get tokens
+      - name: key-auth
+        config:
+          anonymous: jwt-issuer-anonymous
+
+# =============================================================================
+# Plugins - Global configuration
+# =============================================================================
+plugins:
+  # API Key Authentication (Applied globally)
+  - name: key-auth
+    config:
+      key_names:
+        - X-API-Key
+        - apikey
+      key_in_header: true
+      key_in_query: true
+      hide_credentials: true
+      run_on_preflight: false
+
+  # Rate Limiting (Global default)
+  - name: rate-limiting
+    config:
+      minute: 1000
+      hour: 10000
+      policy: redis
+      redis_host: redis.service.consul
+      redis_port: 6379
+      redis_timeout: 2000
+      fault_tolerant: true
+      hide_client_headers: false
+
+  # Request/Response Logging with structured output
+  - name: file-log
+    config:
+      path: /dev/stdout
+      reopen: true
+      # Custom log format for structured JSON output
+      custom_fields_by_lua:
+        correlation_id: "return kong.ctx.shared.correlation_id or ngx.var.http_x_correlation_id"
+        consumer_id: "return kong.ctx.shared.consumer_id"
+        consumer_username: "return kong.ctx.shared.consumer_username"
+        auth_method: "return kong.ctx.shared.authenticated_consumer and 'api-key' or (kong.ctx.shared.jwt_keyset_key and 'jwt' or 'anonymous')"
+        service_name: "return kong.router.get_service() and kong.router.get_service().name"
+        route_name: "return kong.router.get_route() and kong.router.get_route().name"
+        upstream_status: "return ngx.var.upstream_status"
+        request_size: "return ngx.var.request_length"
+        response_size: "return ngx.var.bytes_sent"
+        request_time: "return ngx.var.request_time"
+        upstream_response_time: "return ngx.var.upstream_response_time"
+        client_ip: "return kong.client.get_forwarded_ip()"
+        user_agent: "return ngx.var.http_user_agent"
+
+  # Prometheus Metrics
+  - name: prometheus
+    config:
+      per_consumer: true
+      status_code_metrics: true
+      latency_metrics: true
+      bandwidth_metrics: true
+      upstream_health_metrics: true
+
+  # Correlation ID for request tracing
+  - name: correlation-id
+    config:
+      header_name: X-Correlation-ID
+      generator: uuid
+      echo_downstream: true
+
+  # CORS support (Wave 13: Enhanced with gRPC-Web headers)
+  - name: cors
+    config:
+      origins:
+        - "http://localhost:3000"
+        - "https://*.treasuryos.io"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - PATCH
+        - OPTIONS
+      headers:
+        - Accept
+        - Accept-Version
+        - Content-Length
+        - Content-MD5
+        - Content-Type
+        - Date
+        - Authorization
+        - X-API-Key
+        - X-Correlation-ID
+        # gRPC-Web specific headers
+        - X-Grpc-Web
+        - Grpc-Timeout
+        - Grpc-Accept-Encoding
+      exposed_headers:
+        - X-Correlation-ID
+        - X-RateLimit-Limit-Minute
+        - X-RateLimit-Remaining-Minute
+        - X-Kong-Upstream-Latency
+        - X-Kong-Proxy-Latency
+        # gRPC-Web specific response headers
+        - Grpc-Status
+        - Grpc-Message
+      credentials: true
+      max_age: 3600
+      preflight_continue: false
+
+  # gRPC-Web plugin for registry gRPC service (Wave 13: Enhanced with proto file)
+  - name: grpc-web
+    service: registry-grpc-service
+    config:
+      # Proto file for gRPC-Web transcoding
+      proto: /kong/protos/registry.proto
+      # Path configuration
+      pass_stripped_path: false
+      # CORS configuration for browser access
+      cors_origin: "*"
+      allow_origin_header: true
+    tags:
+      - grpc-web
+      - registry
+
+  # Additional headers for registry service
+  - name: request-transformer
+    service: registry-service
+    config:
+      add:
+        headers:
+          - "X-Forwarded-By:kong-gateway"
+          - "X-Service-Version:v1"
+
+  # JWT Authentication (for service-to-service communication)
+  - name: jwt
+    config:
+      # URI parameters for JWT token
+      uri_param_names:
+        - jwt
+      # Cookie parameters for JWT token
+      cookie_names:
+        - jwt
+      # Header names for JWT token
+      header_names:
+        - Authorization
+      # JWT secret configuration (matches JWT issuer service)
+      secret_is_base64: false
+      claims_to_verify:
+        - exp
+      key_claim_name: iss
+      anonymous: "jwt-anonymous"  # Allow anonymous access to enable API key fallback
+      run_on_preflight: false
+      maximum_expiration: 3600  # 1 hour max (matches JWT issuer)
+
+  # Tenant Header Plugin (extracts tenant_id from JWT claims and adds X-Tenant-ID header)
+  # Must run after JWT plugin to access jwt_claims context
+  - name: tenant-header
+    config:
+      exclude_paths:
+        - "/health"
+        - "/metrics"
+        - "/status"
+        - "/api/v1/auth/token"  # JWT issuer endpoint should be excluded
+      debug_header: false
+      emit_metrics: true
+      header_name: "X-Tenant-ID"
+      strict_mode: true
+      log_level: "info"
+
+  # Global request transformer to add consumer information and JWT claims to all upstream requests
+  - name: request-transformer
+    config:
+      add:
+        headers:
+          # Consumer information (for API key authentication)
+          - "X-Consumer-Username:{{consumer.username}}"
+          - "X-Consumer-ID:{{consumer.id}}"
+          # JWT Claims forwarding (for JWT authentication)
+          - "X-JWT-Sub:{{jwt_claims.sub}}"
+          - "X-JWT-Issuer:{{jwt_claims.iss}}"
+          - "X-JWT-Audience:{{jwt_claims.aud}}"
+          - "X-JWT-ID:{{jwt_claims.jti}}"
+          - "X-JWT-Type:{{jwt_claims.typ}}"
+          - "X-JWT-Scope:{{jwt_claims.scope}}"
+          - "X-JWT-Issued-At:{{jwt_claims.iat}}"
+          - "X-JWT-Expires-At:{{jwt_claims.exp}}"
+          # Authentication method indicators
+          - "X-Auth-Method:{{consumer.username and 'api-key' or (jwt_claims.sub and 'jwt' or 'anonymous')}}"
+
+# =============================================================================
+# Consumers (API Keys) - Test consumers for development
+# =============================================================================
+consumers:
+  - username: default-consumer
+    custom_id: default-dev-consumer
+    tags:
+      - dev
+      - default
+    keyauth_credentials:
+      - key: dev-api-key-12345
+        tags:
+          - dev
+
+  - username: test-consumer
+    custom_id: test-integration-consumer
+    tags:
+      - test
+      - integration
+    keyauth_credentials:
+      - key: test-api-key-67890
+        tags:
+          - test
+
+  # Free tier consumer with limited rate limits
+  - username: free-tier-consumer
+    custom_id: free-tier
+    tags:
+      - free-tier
+      - external
+    keyauth_credentials:
+      - key: free-api-key-11111
+        tags:
+          - free-tier
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+          day: 2500
+          policy: redis
+          redis_host: redis.service.consul
+          redis_port: 6379
+          redis_timeout: 2000
+          fault_tolerant: true
+          hide_client_headers: false
+
+  # Standard tier consumer
+  - username: standard-tier-consumer
+    custom_id: standard-tier
+    tags:
+      - standard-tier
+      - external
+    keyauth_credentials:
+      - key: standard-api-key-22222
+        tags:
+          - standard-tier
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 1000
+          hour: 10000
+          day: 50000
+          policy: redis
+          redis_host: redis.service.consul
+          redis_port: 6379
+          redis_timeout: 2000
+          fault_tolerant: true
+          hide_client_headers: false
+
+  # Premium tier consumer
+  - username: premium-tier-consumer
+    custom_id: premium-tier
+    tags:
+      - premium-tier
+      - external
+      - priority
+    keyauth_credentials:
+      - key: premium-api-key-33333
+        tags:
+          - premium-tier
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 5000
+          hour: 100000
+          day: 500000
+          policy: redis
+          redis_host: redis.service.consul
+          redis_port: 6379
+          redis_timeout: 2000
+          fault_tolerant: true
+          hide_client_headers: false
+
+  # JWT Service Consumers for service-to-service authentication
+  # These consumers authenticate using JWT tokens issued by jwt-issuer service
+
+  # JWT issuer service consumer (for JWT validation)
+  - username: jwt-issuer-service
+    custom_id: jwt-issuer
+    tags:
+      - internal
+      - jwt-issuer
+    jwt_secrets:
+      - key: treasuryos-gateway  # Must match JWT issuer's issuer field
+        secret: dev-secret-change-in-prod  # Must match JWT_SECRET env var
+        algorithm: HS256
+
+  # Registry service consumer (example service that can use JWT)
+  - username: registry-service
+    custom_id: registry-service-jwt
+    tags:
+      - internal
+      - service
+    jwt_secrets:
+      - key: treasuryos-gateway
+        secret: dev-secret-change-in-prod
+        algorithm: HS256
+
+  # Pricing service consumer (example for service-to-service auth)
+  - username: pricing-service
+    custom_id: pricing-service-jwt
+    tags:
+      - internal
+      - service
+    jwt_secrets:
+      - key: treasuryos-gateway
+        secret: dev-secret-change-in-prod
+        algorithm: HS256
+
+  # Anonymous consumer for JWT issuer service access
+  - username: jwt-issuer-anonymous
+    custom_id: jwt-issuer-anon
+    tags:
+      - anonymous
+      - jwt-issuer
+
+  # Anonymous consumer for JWT plugin fallback
+  - username: jwt-anonymous
+    custom_id: jwt-anon
+    tags:
+      - anonymous
+      - jwt-fallback

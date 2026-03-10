@@ -1,0 +1,14 @@
+{
+  "id": "eur_10y_vanilla_swap",
+  "instrument_type": "swap",
+  "currency": "EUR",
+  "notional": 25000000,
+  "tenor": "10Y",
+  "fixed_rate": 0.035,
+  "floating_rate_index": "EUR-EURIBOR-6M",
+  "fixed_frequency": "ANNUAL",
+  "floating_frequency": "SEMI_ANNUAL",
+  "day_count_fixed": "30/360",
+  "day_count_floating": "ACT/360",
+  "description": "Long-term 10Y EUR interest rate swap"
+}

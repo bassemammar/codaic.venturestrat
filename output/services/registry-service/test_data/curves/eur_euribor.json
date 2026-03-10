@@ -1,0 +1,41 @@
+{
+  "name": "EUR EURIBOR Curve",
+  "currency": "EUR",
+  "curve_type": "zero",
+  "reference_date": "2026-01-10",
+  "day_count": "ACT/360",
+  "interpolation": "linear",
+  "tenors": [
+    "1D",
+    "1W",
+    "1M",
+    "3M",
+    "6M",
+    "1Y",
+    "2Y",
+    "3Y",
+    "5Y",
+    "7Y",
+    "10Y",
+    "15Y",
+    "20Y",
+    "30Y"
+  ],
+  "rates": [
+    0.038,
+    0.0375,
+    0.037,
+    0.0365,
+    0.036,
+    0.0345,
+    0.0335,
+    0.033,
+    0.0325,
+    0.0322,
+    0.032,
+    0.0318,
+    0.0316,
+    0.0315
+  ],
+  "description": "EUR EURIBOR zero curve for European instruments"
+}

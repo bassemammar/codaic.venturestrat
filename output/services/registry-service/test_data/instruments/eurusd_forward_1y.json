@@ -1,0 +1,9 @@
+{
+  "id": "eurusd_forward_1y",
+  "instrument_type": "fx_forward",
+  "currency_pair": "EUR/USD",
+  "notional": 10000000,
+  "forward_rate": 1.085,
+  "maturity": "2027-01-10",
+  "description": "1Y EUR/USD FX forward"
+}

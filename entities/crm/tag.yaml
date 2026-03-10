@@ -1,0 +1,26 @@
+name: Tag
+service_name: crm-service
+type: entity
+description: "Tag for categorizing shortlisted investors"
+table_name: vs_tag
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: crm
+
+fields:
+  - name: name
+    type: string
+    max_length: 100
+    nullable: false
+    unique: true
+
+  - name: color
+    type: string
+    max_length: 20
+    nullable: true
+    description: "Hex color code"
+
+indexes:
+  - columns: [name]
+    name: idx_tag_name

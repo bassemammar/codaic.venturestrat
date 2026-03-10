@@ -1,0 +1,49 @@
+name: Role
+domain: auth
+service_name: auth-service
+type: entity
+description: Authorization role with JSON permissions
+table_name: aut_role
+schema_name: auth
+generate_id: true
+generate_timestamps: true
+fields:
+- name: name
+  type: string
+  max_length: 100
+  nullable: false
+  description: Human-readable role name
+
+- name: code
+  type: string
+  max_length: 50
+  nullable: false
+  unique: true
+  indexed: true
+  description: Unique role code (e.g. admin, trader, viewer)
+
+- name: description
+  type: text
+  nullable: true
+  description: Role description
+
+- name: permissions
+  type: json
+  nullable: true
+  description: JSON array of permission codes granted to this role
+
+- name: is_system
+  type: boolean
+  nullable: false
+  default: false
+  description: Whether this is a built-in system role
+
+- name: tenant_id
+  type: uuid
+  nullable: false
+  description: Owning tenant
+
+indexes:
+- name: idx_aut_role_tenant_code
+  columns: [tenant_id, code]
+  unique: true

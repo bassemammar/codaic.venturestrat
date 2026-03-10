@@ -1,0 +1,73 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-03-10T13:09:13.170332Z",
+  "description": "Central port registry for VentureStrat platform services",
+  "port_ranges": {
+    "core_platform": {
+      "api": "8000-8099",
+      "frontend": "3000-3099",
+      "description": "Core platform services"
+    },
+    "financial": {
+      "api": "8100-8199",
+      "frontend": "3100-3199",
+      "description": "Financial services"
+    },
+    "market_data": {
+      "api": "8200-8299",
+      "frontend": "3200-3299",
+      "description": "Market data services"
+    },
+    "reference_data": {
+      "api": "8300-8399",
+      "frontend": "3300-3399",
+      "description": "Reference data services"
+    },
+    "pricing": {
+      "api": "8400-8499",
+      "frontend": "3400-3499",
+      "description": "Pricing and valuation services"
+    },
+    "risk": {
+      "api": "8500-8599",
+      "frontend": "3500-3599",
+      "description": "Risk analytics services"
+    }
+  },
+  "services": {},
+  "infrastructure": {
+    "postgres": 5432,
+    "redis": 6379,
+    "kafka": 9092,
+    "consul": 8500,
+    "jaeger": 16686,
+    "prometheus": 9090,
+    "grafana": 3000
+  },
+  "next_available": {
+    "core_platform": {
+      "api": 8000,
+      "frontend": 3000
+    },
+    "financial": {
+      "api": 8100,
+      "frontend": 3100
+    },
+    "market_data": {
+      "api": 8200,
+      "frontend": 3200
+    },
+    "reference_data": {
+      "api": 8300,
+      "frontend": 3300
+    },
+    "pricing": {
+      "api": 8400,
+      "frontend": 3400
+    },
+    "risk": {
+      "api": 8500,
+      "frontend": 3500
+    }
+  }
+}

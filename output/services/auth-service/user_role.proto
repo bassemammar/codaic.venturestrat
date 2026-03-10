@@ -1,0 +1,89 @@
+// UserRole Service - gRPC API
+// Many-to-many mapping between users and roles
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// UserRole Service
+// =============================================================================
+
+service UserRoleService {
+  // CRUD operations
+  rpc CreateUserRole(CreateUserRoleRequest) returns (UserRole);
+  rpc GetUserRole(GetUserRoleRequest) returns (UserRole);
+  rpc UpdateUserRole(UpdateUserRoleRequest) returns (UserRole);
+  rpc DeleteUserRole(DeleteUserRoleRequest) returns (DeleteUserRoleResponse);
+
+  // List operations
+  rpc ListUserRoles(ListUserRolesRequest) returns (ListUserRolesResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create UserRole
+message CreateUserRoleRequest {
+  string user_id = 1;  // User assigned to this role
+  string role_id = 2;  // Role assigned to user
+}
+
+// Get UserRole
+message GetUserRoleRequest {
+  string id = 1;  // UUID of the userrole
+}
+
+// Update UserRole
+message UpdateUserRoleRequest {
+  string id = 1;  // UUID of the userrole
+  optional string user_id = 2;  // User assigned to this role
+  optional string role_id = 3;  // Role assigned to user
+}
+
+// Delete UserRole
+message DeleteUserRoleRequest {
+  string id = 1;  // UUID of the userrole
+}
+
+message DeleteUserRoleResponse {
+  bool success = 1;
+}
+
+// List UserRoles
+message ListUserRolesRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListUserRolesResponse {
+  repeated UserRole items = 1;  // List of userroles
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message UserRole {
+  string id = 1;  // UUID primary key
+  string user_id = 2;  // User assigned to this role
+  string role_id = 3;  // Role assigned to user
+  string tenant_id = 4;  // Tenant context
+  string tenant_id = 5;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}

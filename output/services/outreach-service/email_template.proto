@@ -1,0 +1,100 @@
+// EmailTemplate Service - gRPC API
+// Reusable email template for outreach and lifecycle emails
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// EmailTemplate Service
+// =============================================================================
+
+service EmailTemplateService {
+  // CRUD operations
+  rpc CreateEmailTemplate(CreateEmailTemplateRequest) returns (EmailTemplate);
+  rpc GetEmailTemplate(GetEmailTemplateRequest) returns (EmailTemplate);
+  rpc UpdateEmailTemplate(UpdateEmailTemplateRequest) returns (EmailTemplate);
+  rpc DeleteEmailTemplate(DeleteEmailTemplateRequest) returns (DeleteEmailTemplateResponse);
+
+  // List operations
+  rpc ListEmailTemplates(ListEmailTemplatesRequest) returns (ListEmailTemplatesResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create EmailTemplate
+message CreateEmailTemplateRequest {
+  optional string user_id = 1;  // Owner user ID, null for system templates
+  string name = 2;
+  string subject = 3;
+  string body = 4;  // HTML template body
+  string category = 5;
+  bool is_active = 6;
+}
+
+// Get EmailTemplate
+message GetEmailTemplateRequest {
+  string id = 1;  // UUID of the emailtemplate
+}
+
+// Update EmailTemplate
+message UpdateEmailTemplateRequest {
+  string id = 1;  // UUID of the emailtemplate
+  optional string user_id = 2;  // Owner user ID, null for system templates
+  optional string name = 3;
+  optional string subject = 4;
+  optional string body = 5;  // HTML template body
+  optional string category = 6;
+  optional bool is_active = 7;
+}
+
+// Delete EmailTemplate
+message DeleteEmailTemplateRequest {
+  string id = 1;  // UUID of the emailtemplate
+}
+
+message DeleteEmailTemplateResponse {
+  bool success = 1;
+}
+
+// List EmailTemplates
+message ListEmailTemplatesRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListEmailTemplatesResponse {
+  repeated EmailTemplate items = 1;  // List of emailtemplates
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message EmailTemplate {
+  string id = 1;  // UUID primary key
+  optional string user_id = 2;  // Owner user ID, null for system templates
+  string name = 3;
+  string subject = 4;
+  string body = 5;  // HTML template body
+  string category = 6;
+  bool is_active = 7;
+  string tenant_id = 8;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}

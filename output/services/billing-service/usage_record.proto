@@ -1,0 +1,112 @@
+// UsageRecord Service - gRPC API
+// Daily usage tracking for subscription limit enforcement
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// UsageRecord Service
+// =============================================================================
+
+service UsageRecordService {
+  // CRUD operations
+  rpc CreateUsageRecord(CreateUsageRecordRequest) returns (UsageRecord);
+  rpc GetUsageRecord(GetUsageRecordRequest) returns (UsageRecord);
+  rpc UpdateUsageRecord(UpdateUsageRecordRequest) returns (UsageRecord);
+  rpc DeleteUsageRecord(DeleteUsageRecordRequest) returns (DeleteUsageRecordResponse);
+
+  // List operations
+  rpc ListUsageRecords(ListUsageRecordsRequest) returns (ListUsageRecordsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create UsageRecord
+message CreateUsageRecordRequest {
+  string user_id = 1;
+  string date = 2;  // Tracking date
+  int32 month = 3;  // Month number (1-12)
+  int32 year = 4;
+  int32 ai_drafts_used = 5;
+  int32 emails_sent = 6;
+  int32 investors_added = 7;
+  int32 monthly_emails_sent = 8;
+  int32 monthly_investors_added = 9;
+  int32 monthly_follow_ups_sent = 10;
+}
+
+// Get UsageRecord
+message GetUsageRecordRequest {
+  string id = 1;  // UUID of the usagerecord
+}
+
+// Update UsageRecord
+message UpdateUsageRecordRequest {
+  string id = 1;  // UUID of the usagerecord
+  optional string user_id = 2;
+  optional string date = 3;  // Tracking date
+  optional int32 month = 4;  // Month number (1-12)
+  optional int32 year = 5;
+  optional int32 ai_drafts_used = 6;
+  optional int32 emails_sent = 7;
+  optional int32 investors_added = 8;
+  optional int32 monthly_emails_sent = 9;
+  optional int32 monthly_investors_added = 10;
+  optional int32 monthly_follow_ups_sent = 11;
+}
+
+// Delete UsageRecord
+message DeleteUsageRecordRequest {
+  string id = 1;  // UUID of the usagerecord
+}
+
+message DeleteUsageRecordResponse {
+  bool success = 1;
+}
+
+// List UsageRecords
+message ListUsageRecordsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListUsageRecordsResponse {
+  repeated UsageRecord items = 1;  // List of usagerecords
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message UsageRecord {
+  string id = 1;  // UUID primary key
+  string user_id = 2;
+  string date = 3;  // Tracking date
+  int32 month = 4;  // Month number (1-12)
+  int32 year = 5;
+  int32 ai_drafts_used = 6;
+  int32 emails_sent = 7;
+  int32 investors_added = 8;
+  int32 monthly_emails_sent = 9;
+  int32 monthly_investors_added = 10;
+  int32 monthly_follow_ups_sent = 11;
+  string tenant_id = 12;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}

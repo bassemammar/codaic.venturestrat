@@ -1,0 +1,21 @@
+name: PastInvestment
+service_name: investor-service
+type: entity
+description: "Portfolio company that an investor has previously invested in"
+table_name: vs_past_investment
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: investor
+
+fields:
+  - name: title
+    type: string
+    max_length: 255
+    nullable: false
+    unique: true
+    description: "Company name"
+
+indexes:
+  - columns: [title]
+    name: idx_past_investment_title

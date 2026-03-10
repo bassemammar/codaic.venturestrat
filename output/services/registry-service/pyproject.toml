@@ -1,0 +1,145 @@
+[project]
+name = "venturestrat-registry-service"
+version = "0.1.0"
+description = "Service registry and tenant management with quota control for VentureStrat"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "VentureStrat Team"}
+]
+
+dependencies = [
+    # Core FastAPI stack
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+
+    # Database
+    "sqlalchemy>=2.0.25",
+    "alembic>=1.13.0",
+    "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9.9",  # For Alembic migrations (sync driver)
+
+    # Validation and settings
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+
+    # Events and messaging
+    "aiokafka>=0.10.0",
+
+    # gRPC support
+    "grpcio>=1.60.0",
+    "grpcio-tools>=1.60.0",
+    "googleapis-common-protos>=1.60.0",  # Google protobuf common types
+
+    # HTTP client
+    "httpx>=0.26.0",
+    "aiohttp>=3.9.0",
+
+    # Redis for quota management
+    "redis>=5.0.0",
+
+    # Authentication
+    "PyJWT>=2.8.0",
+
+    # Observability
+    "prometheus-client>=0.19.0",
+    "structlog>=24.1.0",
+
+    # Utilities
+    "pyyaml>=6.0.1",
+    "semver>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "testcontainers>=3.7.0",
+    "httpx>=0.26.0",
+    "black>=24.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.8.0",
+    "mutmut>=2.4.0",
+    "factory-boy>=3.3.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/registry"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+pythonpath = ["src"]
+markers = [
+    "unit: Unit tests (no external dependencies)",
+    "integration: Integration tests (require Docker)",
+    "e2e: End-to-end tests",
+    "slow: Slow tests (>5 seconds)",
+]
+addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "raise AssertionError",
+]
+show_missing = true
+fail_under = 90
+
+# Mutmut configuration for mutation testing
+[tool.mutmut]
+paths_to_mutate = "src/"
+backup = false
+runner = "python -m pytest tests/ -x --tb=short"
+tests_dir = "tests/"
+exclude_patterns = [
+    "*_pb2.py",
+    "*_pb2_grpc.py",
+    "*/migrations/*",
+    "*/alembic/*",
+]
+
+# Critical paths that require higher mutation testing standards
+critical_paths = [
+    "src/registry/middleware/quota.py",
+    "src/registry/models/tenant_quotas.py",
+    "src/registry/migration_service.py",
+    "src/registry/version.py",
+    "src/registry/tenant_service.py",
+]
+
+# Mutation testing thresholds (percentage)
+mutation_score_threshold = 75
+critical_path_threshold = 85

@@ -1,0 +1,106 @@
+// LegalEntity Service - gRPC API
+// Legal entity (company or organization) that acts as party in legal documents
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// LegalEntity Service
+// =============================================================================
+
+service LegalEntityService {
+  // CRUD operations
+  rpc CreateLegalEntity(CreateLegalEntityRequest) returns (LegalEntity);
+  rpc GetLegalEntity(GetLegalEntityRequest) returns (LegalEntity);
+  rpc UpdateLegalEntity(UpdateLegalEntityRequest) returns (LegalEntity);
+  rpc DeleteLegalEntity(DeleteLegalEntityRequest) returns (DeleteLegalEntityResponse);
+
+  // List operations
+  rpc ListLegalEntitys(ListLegalEntitysRequest) returns (ListLegalEntitysResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create LegalEntity
+message CreateLegalEntityRequest {
+  string user_id = 1;  // Auth user who created this entity
+  string legal_name = 2;  // Registered legal name of the entity
+  string jurisdiction = 3;  // Legal jurisdiction of incorporation
+  string registration_number = 4;  // Company registration or incorporation number
+  optional string incorporation_date = 5;
+  optional int32 authorized_shares = 6;  // Total authorized shares (null if unlimited or N/A)
+  optional double par_value = 7;  // Par value per share
+  optional string registered_address_id = 8;  // Registered office address
+}
+
+// Get LegalEntity
+message GetLegalEntityRequest {
+  string id = 1;  // UUID of the legalentity
+}
+
+// Update LegalEntity
+message UpdateLegalEntityRequest {
+  string id = 1;  // UUID of the legalentity
+  optional string user_id = 2;  // Auth user who created this entity
+  optional string legal_name = 3;  // Registered legal name of the entity
+  optional string jurisdiction = 4;  // Legal jurisdiction of incorporation
+  optional string registration_number = 5;  // Company registration or incorporation number
+  optional string incorporation_date = 6;
+  optional int32 authorized_shares = 7;  // Total authorized shares (null if unlimited or N/A)
+  optional double par_value = 8;  // Par value per share
+  optional string registered_address_id = 9;  // Registered office address
+}
+
+// Delete LegalEntity
+message DeleteLegalEntityRequest {
+  string id = 1;  // UUID of the legalentity
+}
+
+message DeleteLegalEntityResponse {
+  bool success = 1;
+}
+
+// List LegalEntitys
+message ListLegalEntitysRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListLegalEntitysResponse {
+  repeated LegalEntity items = 1;  // List of legalentitys
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message LegalEntity {
+  string id = 1;  // UUID primary key
+  string user_id = 2;  // Auth user who created this entity
+  string legal_name = 3;  // Registered legal name of the entity
+  string jurisdiction = 4;  // Legal jurisdiction of incorporation
+  string registration_number = 5;  // Company registration or incorporation number
+  optional string incorporation_date = 6;
+  optional int32 authorized_shares = 7;  // Total authorized shares (null if unlimited or N/A)
+  optional double par_value = 8;  // Par value per share
+  optional string registered_address_id = 9;  // Registered office address
+  string tenant_id = 10;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}

@@ -1,0 +1,383 @@
+_format_version: "3.0"
+_transform: true
+
+# =============================================================================
+# Kong Gateway Configuration - Simplified Initial Setup
+# =============================================================================
+#
+# This is a simplified configuration for first-time Kong startup.
+# Routes both registry-service and schema-registry-service through Kong.
+# Includes essential plugins: authentication, rate limiting, observability.
+#
+# Advanced features (grpc-web, custom plugins) available in kong.yaml.advanced
+# =============================================================================
+
+# =============================================================================
+# Upstreams - Service targets with health checks
+# =============================================================================
+upstreams:
+  - name: registry-service.upstream
+    algorithm: round-robin
+    healthchecks:
+      active:
+        type: http
+        http_path: /health/ready
+        timeout: 5
+        concurrency: 3
+        https_verify_certificate: false
+        healthy:
+          interval: 10
+          successes: 2
+          http_statuses: [200, 302]
+        unhealthy:
+          interval: 10
+          http_failures: 3
+          timeouts: 5
+          http_statuses: [429, 500, 502, 503, 504]
+    slots: 1000
+    hash_on: none
+    hash_fallback: none
+    targets:
+      # Direct target to registry-service container
+      - target: venturestrat-registry-service:8080
+        weight: 100
+        tags:
+          - registry
+          - rest
+
+  - name: schema-registry-service.upstream
+    algorithm: round-robin
+    healthchecks:
+      active:
+        type: http
+        http_path: /health/live
+        timeout: 5
+        concurrency: 3
+        https_verify_certificate: false
+        healthy:
+          interval: 10
+          successes: 2
+          http_statuses: [200]
+        unhealthy:
+          interval: 10
+          http_failures: 3
+          timeouts: 5
+          http_statuses: [429, 500, 502, 503, 504]
+    slots: 1000
+    hash_on: none
+    hash_fallback: none
+    targets:
+      # Direct target to schema-registry-service container
+      - target: venturestrat-schema-registry-service:8000
+        weight: 100
+        tags:
+          - schema-registry
+          - rest
+
+# =============================================================================
+# Services - Backend service definitions
+# =============================================================================
+services:
+  - name: registry-service
+    host: registry-service.upstream
+    port: 80
+    protocol: http
+    connect_timeout: 5000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 3
+    routes:
+      - name: registry-rest
+        paths:
+          - /api/v1/registry
+        strip_path: true
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 100
+    tags:
+      - registry
+      - service
+
+  - name: schema-registry-service
+    host: schema-registry-service.upstream
+    port: 80
+    protocol: http
+    connect_timeout: 5000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 3
+    routes:
+      - name: schema-registry-rest
+        paths:
+          - /api/v1/schemas
+        strip_path: true
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 100
+    tags:
+      - schema-registry
+      - service
+
+  # Health check service (Gateway health endpoint via JWT issuer)
+  - name: health-service
+    url: http://jwt-issuer:8000
+    connect_timeout: 5000
+    write_timeout: 10000
+    read_timeout: 10000
+    retries: 1
+    routes:
+      - name: health-check
+        paths:
+          - /health
+        strip_path: false
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 200
+    plugins:
+      # Health endpoint should be accessible without authentication
+      - name: key-auth
+        config:
+          anonymous: jwt-issuer-anonymous
+    tags:
+      - health
+      - monitoring
+
+  # JWT issuer service (For JWT token issuance)
+  - name: jwt-issuer-service
+    url: http://jwt-issuer:8000
+    connect_timeout: 5000
+    write_timeout: 10000
+    read_timeout: 10000
+    retries: 1
+    routes:
+      - name: jwt-token-route
+        paths:
+          - /api/v1/auth/token
+        strip_path: true
+        protocols:
+          - http
+          - https
+        preserve_host: false
+        regex_priority: 150
+    plugins:
+      # JWT issuer should be accessible without authentication
+      - name: key-auth
+        config:
+          anonymous: jwt-issuer-anonymous
+    tags:
+      - auth
+      - jwt
+
+# =============================================================================
+# Plugins - Global configuration
+# =============================================================================
+plugins:
+  # API Key Authentication (Applied globally)
+  - name: key-auth
+    config:
+      key_names:
+        - X-API-Key
+        - apikey
+      key_in_header: true
+      key_in_query: true
+      hide_credentials: true
+      run_on_preflight: false
+
+  # Rate Limiting (Global default)
+  - name: rate-limiting
+    config:
+      minute: 1000
+      hour: 10000
+      policy: local
+      fault_tolerant: true
+      hide_client_headers: false
+
+  # Request/Response Logging
+  - name: file-log
+    config:
+      path: /dev/stdout
+      reopen: true
+
+  # Prometheus Metrics
+  - name: prometheus
+    config:
+      per_consumer: true
+      status_code_metrics: true
+      latency_metrics: true
+      bandwidth_metrics: true
+      upstream_health_metrics: true
+
+  # Correlation ID for request tracing
+  - name: correlation-id
+    config:
+      header_name: X-Correlation-ID
+      generator: uuid
+      echo_downstream: true
+
+  # CORS support
+  - name: cors
+    config:
+      origins:
+        - "http://localhost:3000"
+        - "https://*.venturestrat.io"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - PATCH
+        - OPTIONS
+      headers:
+        - Accept
+        - Accept-Version
+        - Content-Length
+        - Content-Type
+        - Date
+        - Authorization
+        - X-API-Key
+        - X-Correlation-ID
+      exposed_headers:
+        - X-Correlation-ID
+        - X-RateLimit-Limit-Minute
+        - X-RateLimit-Remaining-Minute
+      credentials: true
+      max_age: 3600
+
+  # JWT Authentication (for service-to-service communication)
+  - name: jwt
+    config:
+      uri_param_names:
+        - jwt
+      cookie_names:
+        - jwt
+      header_names:
+        - Authorization
+      secret_is_base64: false
+      claims_to_verify:
+        - exp
+      key_claim_name: iss
+      anonymous: "jwt-anonymous"
+      run_on_preflight: false
+      maximum_expiration: 3600
+
+  # Request headers for forwarding auth info
+  - name: request-transformer
+    config:
+      add:
+        headers:
+          - "X-Forwarded-By:kong-gateway"
+          - "X-Gateway-Version:v1"
+
+# =============================================================================
+# Consumers (API Keys) - Test consumers for development
+# =============================================================================
+consumers:
+  - username: default-consumer
+    custom_id: default-dev-consumer
+    tags:
+      - dev
+      - default
+    keyauth_credentials:
+      - key: dev-api-key-12345
+        tags:
+          - dev
+
+  - username: test-consumer
+    custom_id: test-integration-consumer
+    tags:
+      - test
+      - integration
+    keyauth_credentials:
+      - key: test-api-key-67890
+        tags:
+          - test
+
+  # Free tier consumer with limited rate limits
+  - username: free-tier-consumer
+    custom_id: free-tier
+    tags:
+      - free-tier
+      - external
+    keyauth_credentials:
+      - key: free-api-key-11111
+        tags:
+          - free-tier
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+          day: 2500
+          policy: local
+          fault_tolerant: true
+
+  # Premium tier consumer
+  - username: premium-tier-consumer
+    custom_id: premium-tier
+    tags:
+      - premium-tier
+      - external
+    keyauth_credentials:
+      - key: premium-api-key-33333
+        tags:
+          - premium-tier
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 5000
+          hour: 100000
+          day: 500000
+          policy: local
+          fault_tolerant: true
+
+  # JWT Service Consumers for service-to-service authentication
+  - username: jwt-issuer-service
+    custom_id: jwt-issuer
+    tags:
+      - internal
+      - jwt-issuer
+    jwt_secrets:
+      - key: venturestrat-gateway
+        secret: dev-secret-change-in-prod
+        algorithm: HS256
+
+  # Anonymous consumer for JWT issuer service access
+  - username: jwt-issuer-anonymous
+    custom_id: jwt-issuer-anon
+    tags:
+      - anonymous
+      - jwt-issuer
+
+  # Anonymous consumer for JWT plugin fallback
+  - username: jwt-anonymous
+    custom_id: jwt-anon
+    tags:
+      - anonymous
+      - jwt-fallback
+
+  # Auth service consumer for JWT token issuance
+  - username: auth-service
+    custom_id: auth-service
+    tags:
+      - internal
+      - jwt-issuer
+      - auth
+    jwt_secrets:
+      - key: auth-service
+        algorithm: RS256
+        rsa_public_key: |
+          -----BEGIN PUBLIC KEY-----
+          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAthW8jJRPShpMMNMcDPsf
+          X+o/U+OTRL+qCbpTAWDA6Dnbfx3M2bYCpSdyXbaVtCPXqDnV4VPED1xdTN/yH6/G
+          uCE6/5S4M3tPntWLJJN2Ako6g8C0sR84xPmxRi9fQreSAcAKV9Pbvuj47fuiKpzD
+          eSRiDkDP4D3PoDO2MGWQ9AgH6il8Burq7MTjT7/0ox/IAUZSg1c+v5RgS+M2tMfB
+          u3wTFCCqCepenWKEt/n7bETchS3hkC2NpvsibAlDitq7uwLCv9Lz1KvxppMgKWTz
+          qAihZWju4ubpHo9cHaQq/1B6jn+g92y5jyUP6e5wKBmuBlBaQset3w4Qi3fP/c/i
+          HwIDAQAB
+          -----END PUBLIC KEY-----

@@ -1,0 +1,8 @@
+# VentureStrat Platform - Combined Docker Compose
+# Usage:
+#   docker compose up -d                    # Start everything
+#   docker compose --profile observability up -d  # Include monitoring
+
+include:
+  - docker-compose.infra.yaml
+  - docker-compose.services.yaml

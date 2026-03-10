@@ -1,0 +1,112 @@
+// InvestmentTerm Service - gRPC API
+// SAFE or priced round investment terms linked to a legal entity and investor person
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// InvestmentTerm Service
+// =============================================================================
+
+service InvestmentTermService {
+  // CRUD operations
+  rpc CreateInvestmentTerm(CreateInvestmentTermRequest) returns (InvestmentTerm);
+  rpc GetInvestmentTerm(GetInvestmentTermRequest) returns (InvestmentTerm);
+  rpc UpdateInvestmentTerm(UpdateInvestmentTermRequest) returns (InvestmentTerm);
+  rpc DeleteInvestmentTerm(DeleteInvestmentTermRequest) returns (DeleteInvestmentTermResponse);
+
+  // List operations
+  rpc ListInvestmentTerms(ListInvestmentTermsRequest) returns (ListInvestmentTermsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create InvestmentTerm
+message CreateInvestmentTermRequest {
+  string legal_entity_id = 1;  // Company receiving the investment
+  string investor_person_id = 2;  // Person making the investment
+  optional string investor_id = 3;  // Cross-service reference to investor-service Investor
+  double investment_amount = 4;  // Investment amount (must be > 0)
+  string currency = 5;
+  optional double valuation_cap = 6;  // SAFE valuation cap (null for uncapped)
+  optional double discount_percentage = 7;  // Discount percentage 0-30 (null if no discount)
+  string investment_date = 8;
+  bool pro_rata_rights = 9;
+  optional string source_document_id = 10;  // Reference to LegalDocument that defines these terms
+}
+
+// Get InvestmentTerm
+message GetInvestmentTermRequest {
+  string id = 1;  // UUID of the investmentterm
+}
+
+// Update InvestmentTerm
+message UpdateInvestmentTermRequest {
+  string id = 1;  // UUID of the investmentterm
+  optional string legal_entity_id = 2;  // Company receiving the investment
+  optional string investor_person_id = 3;  // Person making the investment
+  optional string investor_id = 4;  // Cross-service reference to investor-service Investor
+  optional double investment_amount = 5;  // Investment amount (must be > 0)
+  optional string currency = 6;
+  optional double valuation_cap = 7;  // SAFE valuation cap (null for uncapped)
+  optional double discount_percentage = 8;  // Discount percentage 0-30 (null if no discount)
+  optional string investment_date = 9;
+  optional bool pro_rata_rights = 10;
+  optional string source_document_id = 11;  // Reference to LegalDocument that defines these terms
+}
+
+// Delete InvestmentTerm
+message DeleteInvestmentTermRequest {
+  string id = 1;  // UUID of the investmentterm
+}
+
+message DeleteInvestmentTermResponse {
+  bool success = 1;
+}
+
+// List InvestmentTerms
+message ListInvestmentTermsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListInvestmentTermsResponse {
+  repeated InvestmentTerm items = 1;  // List of investmentterms
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message InvestmentTerm {
+  string id = 1;  // UUID primary key
+  string legal_entity_id = 2;  // Company receiving the investment
+  string investor_person_id = 3;  // Person making the investment
+  optional string investor_id = 4;  // Cross-service reference to investor-service Investor
+  double investment_amount = 5;  // Investment amount (must be > 0)
+  string currency = 6;
+  optional double valuation_cap = 7;  // SAFE valuation cap (null for uncapped)
+  optional double discount_percentage = 8;  // Discount percentage 0-30 (null if no discount)
+  string investment_date = 9;
+  bool pro_rata_rights = 10;
+  optional string source_document_id = 11;  // Reference to LegalDocument that defines these terms
+  string tenant_id = 12;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}

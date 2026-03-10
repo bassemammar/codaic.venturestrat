@@ -1,0 +1,49 @@
+name: UserRole
+domain: auth
+service_name: auth-service
+type: entity
+description: Many-to-many mapping between users and roles
+table_name: aut_user_role
+schema_name: auth
+generate_id: true
+generate_timestamps: true
+fields:
+- name: user_id
+  type: uuid
+  nullable: false
+  is_foreign_key: true
+  fk_schema: auth
+  fk_table: aut_user
+  fk_column: id
+  indexed: true
+  description: User assigned to this role
+
+- name: role_id
+  type: uuid
+  nullable: false
+  is_foreign_key: true
+  fk_schema: auth
+  fk_table: aut_role
+  fk_column: id
+  indexed: true
+  description: Role assigned to user
+
+- name: tenant_id
+  type: uuid
+  nullable: false
+  description: Tenant context
+
+indexes:
+- name: idx_aut_user_role_unique
+  columns: [user_id, role_id, tenant_id]
+  unique: true
+
+relationships:
+- name: user
+  type: many_to_one
+  target_entity: User
+  foreign_key: user_id
+- name: role
+  type: many_to_one
+  target_entity: Role
+  foreign_key: role_id

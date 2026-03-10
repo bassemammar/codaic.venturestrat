@@ -1,0 +1,100 @@
+// LifecycleEmail Service - gRPC API
+// Tracks drip campaign email execution per user
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// LifecycleEmail Service
+// =============================================================================
+
+service LifecycleEmailService {
+  // CRUD operations
+  rpc CreateLifecycleEmail(CreateLifecycleEmailRequest) returns (LifecycleEmail);
+  rpc GetLifecycleEmail(GetLifecycleEmailRequest) returns (LifecycleEmail);
+  rpc UpdateLifecycleEmail(UpdateLifecycleEmailRequest) returns (LifecycleEmail);
+  rpc DeleteLifecycleEmail(DeleteLifecycleEmailRequest) returns (DeleteLifecycleEmailResponse);
+
+  // List operations
+  rpc ListLifecycleEmails(ListLifecycleEmailsRequest) returns (ListLifecycleEmailsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create LifecycleEmail
+message CreateLifecycleEmailRequest {
+  string user_id = 1;
+  string template_code = 2;  // Lifecycle template identifier: welcome, onboarding_reminder, gmail_reminder, etc.
+  string status = 3;
+  google.protobuf.Timestamp scheduled_for = 4;  // When this lifecycle email should be sent
+  optional google.protobuf.Timestamp sent_at = 5;
+  optional string skip_reason = 6;  // Why this email was skipped
+}
+
+// Get LifecycleEmail
+message GetLifecycleEmailRequest {
+  string id = 1;  // UUID of the lifecycleemail
+}
+
+// Update LifecycleEmail
+message UpdateLifecycleEmailRequest {
+  string id = 1;  // UUID of the lifecycleemail
+  optional string user_id = 2;
+  optional string template_code = 3;  // Lifecycle template identifier: welcome, onboarding_reminder, gmail_reminder, etc.
+  optional string status = 4;
+  optional google.protobuf.Timestamp scheduled_for = 5;  // When this lifecycle email should be sent
+  optional google.protobuf.Timestamp sent_at = 6;
+  optional string skip_reason = 7;  // Why this email was skipped
+}
+
+// Delete LifecycleEmail
+message DeleteLifecycleEmailRequest {
+  string id = 1;  // UUID of the lifecycleemail
+}
+
+message DeleteLifecycleEmailResponse {
+  bool success = 1;
+}
+
+// List LifecycleEmails
+message ListLifecycleEmailsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListLifecycleEmailsResponse {
+  repeated LifecycleEmail items = 1;  // List of lifecycleemails
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message LifecycleEmail {
+  string id = 1;  // UUID primary key
+  string user_id = 2;
+  string template_code = 3;  // Lifecycle template identifier: welcome, onboarding_reminder, gmail_reminder, etc.
+  string status = 4;
+  google.protobuf.Timestamp scheduled_for = 5;  // When this lifecycle email should be sent
+  optional google.protobuf.Timestamp sent_at = 6;
+  optional string skip_reason = 7;  // Why this email was skipped
+  string tenant_id = 8;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}

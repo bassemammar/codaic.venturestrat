@@ -1,0 +1,75 @@
+_format_version: "3.0"
+_transform: true
+
+# =============================================================================
+# Simple Kong Configuration for Testing Metrics Endpoint
+# =============================================================================
+
+# =============================================================================
+# Services - Just a simple health service for testing
+# =============================================================================
+services:
+  - name: health-service
+    url: http://httpbin.org
+    connect_timeout: 5000
+    write_timeout: 10000
+    read_timeout: 10000
+    retries: 1
+    routes:
+      - name: health-check
+        paths:
+          - /health
+        strip_path: false
+        protocols:
+          - http
+          - https
+        preserve_host: false
+
+# =============================================================================
+# Plugins - Global configuration with Prometheus
+# =============================================================================
+plugins:
+  # Prometheus Metrics - This is what we're testing
+  - name: prometheus
+    config:
+      per_consumer: true
+      status_code_metrics: true
+      latency_metrics: true
+      bandwidth_metrics: true
+      upstream_health_metrics: true
+
+  # Tenant Header Plugin (minimal configuration for simple testing)
+  - name: tenant-header
+    config:
+      exclude_paths:
+        - "/health"
+        - "/metrics"
+      debug_header: false
+      emit_metrics: false
+      header_name: "X-Tenant-ID"
+      strict_mode: false  # Very lenient for simple testing
+      log_level: "warn"   # Minimal logging
+
+  # Simple CORS for health endpoint
+  - name: cors
+    config:
+      origins: ["*"]
+      methods:
+        - GET
+        - POST
+        - OPTIONS
+      headers:
+        - Accept
+        - Content-Type
+      credentials: false
+      max_age: 3600
+
+# =============================================================================
+# Consumers (for metrics testing)
+# =============================================================================
+consumers:
+  - username: test-consumer
+    custom_id: test-metrics
+    tags:
+      - test
+      - metrics

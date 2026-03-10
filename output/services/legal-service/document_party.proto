@@ -1,0 +1,97 @@
+// DocumentParty Service - gRPC API
+// Links a legal document to its parties (entity + signatory) with role designation
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// DocumentParty Service
+// =============================================================================
+
+service DocumentPartyService {
+  // CRUD operations
+  rpc CreateDocumentParty(CreateDocumentPartyRequest) returns (DocumentParty);
+  rpc GetDocumentParty(GetDocumentPartyRequest) returns (DocumentParty);
+  rpc UpdateDocumentParty(UpdateDocumentPartyRequest) returns (DocumentParty);
+  rpc DeleteDocumentParty(DeleteDocumentPartyRequest) returns (DeleteDocumentPartyResponse);
+
+  // List operations
+  rpc ListDocumentPartys(ListDocumentPartysRequest) returns (ListDocumentPartysResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create DocumentParty
+message CreateDocumentPartyRequest {
+  string legal_document_id = 1;
+  string legal_entity_id = 2;  // Company acting as party to the document
+  optional string signatory_id = 3;  // Person signing on behalf of the entity
+  string party_role = 4;  // Role in the document context
+  optional string party_label = 5;  // Custom label, e.g. 'The Disclosing Party'
+}
+
+// Get DocumentParty
+message GetDocumentPartyRequest {
+  string id = 1;  // UUID of the documentparty
+}
+
+// Update DocumentParty
+message UpdateDocumentPartyRequest {
+  string id = 1;  // UUID of the documentparty
+  optional string legal_document_id = 2;
+  optional string legal_entity_id = 3;  // Company acting as party to the document
+  optional string signatory_id = 4;  // Person signing on behalf of the entity
+  optional string party_role = 5;  // Role in the document context
+  optional string party_label = 6;  // Custom label, e.g. 'The Disclosing Party'
+}
+
+// Delete DocumentParty
+message DeleteDocumentPartyRequest {
+  string id = 1;  // UUID of the documentparty
+}
+
+message DeleteDocumentPartyResponse {
+  bool success = 1;
+}
+
+// List DocumentPartys
+message ListDocumentPartysRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListDocumentPartysResponse {
+  repeated DocumentParty items = 1;  // List of documentpartys
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message DocumentParty {
+  string id = 1;  // UUID primary key
+  string legal_document_id = 2;
+  string legal_entity_id = 3;  // Company acting as party to the document
+  optional string signatory_id = 4;  // Person signing on behalf of the entity
+  string party_role = 5;  // Role in the document context
+  optional string party_label = 6;  // Custom label, e.g. 'The Disclosing Party'
+  string tenant_id = 7;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}

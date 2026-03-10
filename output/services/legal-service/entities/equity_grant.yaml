@@ -1,0 +1,105 @@
+name: EquityGrant
+service_name: legal-service
+type: entity
+description: "Cap table entry — equity holding in a legal entity with share class and valuation"
+table_name: vs_equity_grant
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: legal_entity_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_legal_entity
+    fk_column: id
+    description: "Company whose shares are held"
+
+  - name: holder_person_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_contact_person
+    fk_column: id
+    description: "Person holding equity (null if entity holder)"
+
+  - name: holder_entity_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_legal_entity
+    fk_column: id
+    description: "Entity holding equity (null if person holder)"
+
+  - name: holder_type
+    type: string
+    max_length: 10
+    nullable: false
+    enum_values: [person, entity]
+    description: "Polymorphic holder discriminator"
+
+  - name: share_class
+    type: string
+    max_length: 30
+    nullable: false
+    enum_values: [common, preferred_seed, preferred_a, preferred_b, preferred_c, options]
+
+  - name: number_of_shares
+    type: integer
+    nullable: false
+    description: "Number of shares held (must be > 0)"
+
+  - name: percentage
+    type: decimal
+    precision: 5
+    scale: 2
+    nullable: false
+    description: "Ownership percentage (0.01 to 100.00)"
+
+  - name: valuation
+    type: decimal
+    precision: 15
+    scale: 2
+    nullable: true
+    description: "Valuation at time of issue"
+
+  - name: issue_date
+    type: date
+    nullable: false
+
+  - name: source_document_id
+    type: uuid
+    nullable: true
+    description: "Reference to LegalDocument that created this grant"
+
+relationships:
+  - name: legal_entity
+    type: many_to_one
+    target_entity: LegalEntity
+    foreign_key: legal_entity_id
+
+  - name: holder_person
+    type: many_to_one
+    target_entity: ContactPerson
+    foreign_key: holder_person_id
+
+  - name: vesting_schedule
+    type: one_to_many
+    target_entity: VestingSchedule
+    foreign_key: equity_grant_id
+    cascade_delete: true
+
+indexes:
+  - columns: [legal_entity_id]
+    name: idx_equity_grant_entity
+  - columns: [holder_person_id]
+    name: idx_equity_grant_holder_person
+  - columns: [holder_entity_id]
+    name: idx_equity_grant_holder_entity
+  - columns: [holder_type]
+    name: idx_equity_grant_holder_type

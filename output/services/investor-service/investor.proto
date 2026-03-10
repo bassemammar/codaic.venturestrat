@@ -1,0 +1,133 @@
+// Investor Service - gRPC API
+// VC investor profile with contact info, location, stages, types, and social links
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// Investor Service
+// =============================================================================
+
+service InvestorService {
+  // CRUD operations
+  rpc CreateInvestor(CreateInvestorRequest) returns (Investor);
+  rpc GetInvestor(GetInvestorRequest) returns (Investor);
+  rpc UpdateInvestor(UpdateInvestorRequest) returns (Investor);
+  rpc DeleteInvestor(DeleteInvestorRequest) returns (DeleteInvestorResponse);
+
+  // List operations
+  rpc ListInvestors(ListInvestorsRequest) returns (ListInvestorsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create Investor
+message CreateInvestorRequest {
+  string name = 1;  // Full name of the investor
+  optional string avatar = 2;  // S3 signed URL for profile image
+  optional string website = 3;
+  optional string phone = 4;
+  optional string title = 5;  // Job title, e.g. Managing Partner
+  string external_id = 6;  // Original source ID from data import
+  optional string city = 7;
+  optional string state = 8;
+  optional string country = 9;
+  optional string company_name = 10;  // Fund or firm name
+  string stages = 11;  // Investment stages, e.g. ["Seed", "Series A"]
+  string investor_types = 12;  // Investor types, e.g. ["Angel", "VC"]
+  optional string social_links = 13;  // Social media links: {linkedin, twitter, crunchbase}
+  optional string pipelines = 14;  // Deal pipeline data from source
+  optional string founded_companies = 15;
+  int32 country_priority = 16;  // Sorting weight for country-based ordering
+  optional string source_data = 17;  // Raw import data from original source
+}
+
+// Get Investor
+message GetInvestorRequest {
+  string id = 1;  // UUID of the investor
+}
+
+// Update Investor
+message UpdateInvestorRequest {
+  string id = 1;  // UUID of the investor
+  optional string name = 2;  // Full name of the investor
+  optional string avatar = 3;  // S3 signed URL for profile image
+  optional string website = 4;
+  optional string phone = 5;
+  optional string title = 6;  // Job title, e.g. Managing Partner
+  optional string external_id = 7;  // Original source ID from data import
+  optional string city = 8;
+  optional string state = 9;
+  optional string country = 10;
+  optional string company_name = 11;  // Fund or firm name
+  optional string stages = 12;  // Investment stages, e.g. ["Seed", "Series A"]
+  optional string investor_types = 13;  // Investor types, e.g. ["Angel", "VC"]
+  optional string social_links = 14;  // Social media links: {linkedin, twitter, crunchbase}
+  optional string pipelines = 15;  // Deal pipeline data from source
+  optional string founded_companies = 16;
+  optional int32 country_priority = 17;  // Sorting weight for country-based ordering
+  optional string source_data = 18;  // Raw import data from original source
+}
+
+// Delete Investor
+message DeleteInvestorRequest {
+  string id = 1;  // UUID of the investor
+}
+
+message DeleteInvestorResponse {
+  bool success = 1;
+}
+
+// List Investors
+message ListInvestorsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListInvestorsResponse {
+  repeated Investor items = 1;  // List of investors
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message Investor {
+  string id = 1;  // UUID primary key
+  string name = 2;  // Full name of the investor
+  optional string avatar = 3;  // S3 signed URL for profile image
+  optional string website = 4;
+  optional string phone = 5;
+  optional string title = 6;  // Job title, e.g. Managing Partner
+  string external_id = 7;  // Original source ID from data import
+  optional string city = 8;
+  optional string state = 9;
+  optional string country = 10;
+  optional string company_name = 11;  // Fund or firm name
+  string stages = 12;  // Investment stages, e.g. ["Seed", "Series A"]
+  string investor_types = 13;  // Investor types, e.g. ["Angel", "VC"]
+  optional string social_links = 14;  // Social media links: {linkedin, twitter, crunchbase}
+  optional string pipelines = 15;  // Deal pipeline data from source
+  optional string founded_companies = 16;
+  int32 country_priority = 17;  // Sorting weight for country-based ordering
+  optional string source_data = 18;  // Raw import data from original source
+  string tenant_id = 19;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 20;
+  google.protobuf.Timestamp updated_at = 21;
+}

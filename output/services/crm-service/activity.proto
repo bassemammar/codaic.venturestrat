@@ -1,0 +1,103 @@
+// Activity Service - gRPC API
+// Outreach activity touchpoint on a shortlisted investor
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// Activity Service
+// =============================================================================
+
+service ActivityService {
+  // CRUD operations
+  rpc CreateActivity(CreateActivityRequest) returns (Activity);
+  rpc GetActivity(GetActivityRequest) returns (Activity);
+  rpc UpdateActivity(UpdateActivityRequest) returns (Activity);
+  rpc DeleteActivity(DeleteActivityRequest) returns (DeleteActivityResponse);
+
+  // List operations
+  rpc ListActivitys(ListActivitysRequest) returns (ListActivitysResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create Activity
+message CreateActivityRequest {
+  string shortlist_id = 1;  // Parent shortlist record
+  string activity_type = 2;
+  optional string summary = 3;
+  optional string details = 4;
+  google.protobuf.Timestamp date = 5;  // When the activity occurred
+  string user_id = 6;  // Auth user who performed the activity
+  optional string reference_id = 7;  // External reference, e.g. message ID
+}
+
+// Get Activity
+message GetActivityRequest {
+  string id = 1;  // UUID of the activity
+}
+
+// Update Activity
+message UpdateActivityRequest {
+  string id = 1;  // UUID of the activity
+  optional string shortlist_id = 2;  // Parent shortlist record
+  optional string activity_type = 3;
+  optional string summary = 4;
+  optional string details = 5;
+  optional google.protobuf.Timestamp date = 6;  // When the activity occurred
+  optional string user_id = 7;  // Auth user who performed the activity
+  optional string reference_id = 8;  // External reference, e.g. message ID
+}
+
+// Delete Activity
+message DeleteActivityRequest {
+  string id = 1;  // UUID of the activity
+}
+
+message DeleteActivityResponse {
+  bool success = 1;
+}
+
+// List Activitys
+message ListActivitysRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListActivitysResponse {
+  repeated Activity items = 1;  // List of activitys
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message Activity {
+  string id = 1;  // UUID primary key
+  string shortlist_id = 2;  // Parent shortlist record
+  string activity_type = 3;
+  optional string summary = 4;
+  optional string details = 5;
+  google.protobuf.Timestamp date = 6;  // When the activity occurred
+  string user_id = 7;  // Auth user who performed the activity
+  optional string reference_id = 8;  // External reference, e.g. message ID
+  string tenant_id = 9;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}

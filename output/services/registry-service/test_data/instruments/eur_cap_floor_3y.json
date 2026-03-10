@@ -1,0 +1,12 @@
+{
+  "id": "eur_cap_floor_3y",
+  "instrument_type": "cap",
+  "currency": "EUR",
+  "notional": 20000000,
+  "strike": 0.04,
+  "tenor": "3Y",
+  "frequency": "QUARTERLY",
+  "volatility": 0.3,
+  "model": "Black",
+  "description": "3Y EUR interest rate cap"
+}

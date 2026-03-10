@@ -1,0 +1,50 @@
+name: VestingSchedule
+service_name: legal-service
+type: entity
+description: "Vesting schedule for equity grants — cliff period, total period, and acceleration triggers"
+table_name: vs_vesting_schedule
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: equity_grant_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_equity_grant
+    fk_column: id
+
+  - name: total_period_months
+    type: integer
+    nullable: false
+    description: "Total vesting period in months (12-60, typically 48 for 4-year vest)"
+
+  - name: cliff_months
+    type: integer
+    nullable: false
+    description: "Cliff period in months (0-24, typically 12 for 1-year cliff)"
+
+  - name: start_date
+    type: date
+    nullable: false
+
+  - name: acceleration_trigger
+    type: string
+    max_length: 20
+    nullable: false
+    default: "none"
+    enum_values: [none, single_trigger, double_trigger]
+    description: "Acceleration event type on change of control"
+
+relationships:
+  - name: equity_grant
+    type: many_to_one
+    target_entity: EquityGrant
+    foreign_key: equity_grant_id
+
+indexes:
+  - columns: [equity_grant_id]
+    name: idx_vesting_schedule_grant

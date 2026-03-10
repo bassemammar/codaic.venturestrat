@@ -1,0 +1,41 @@
+{
+  "name": "Tenant A - USD SOFR Curve",
+  "currency": "USD",
+  "curve_type": "zero",
+  "reference_date": "2026-01-10",
+  "day_count": "ACT/360",
+  "interpolation": "linear",
+  "tenors": [
+    "1D",
+    "1W",
+    "1M",
+    "3M",
+    "6M",
+    "1Y",
+    "2Y",
+    "3Y",
+    "5Y",
+    "7Y",
+    "10Y",
+    "15Y",
+    "20Y",
+    "30Y"
+  ],
+  "rates": [
+    0.052,
+    0.0515,
+    0.051,
+    0.0505,
+    0.05,
+    0.0485,
+    0.047,
+    0.0455,
+    0.044,
+    0.043,
+    0.0425,
+    0.042,
+    0.0418,
+    0.0415
+  ],
+  "description": "Custom USD SOFR curve for Tenant A with higher short-end rates"
+}

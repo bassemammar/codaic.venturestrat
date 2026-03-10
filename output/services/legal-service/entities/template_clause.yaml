@@ -1,0 +1,62 @@
+name: TemplateClause
+service_name: legal-service
+type: entity
+description: "Clause library entry with conditional variants (A/B/C/D) for legal document generation"
+table_name: vs_template_clause
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: name
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Clause name, e.g. Purpose, Duration, Data Protection"
+
+  - name: category
+    type: string
+    max_length: 50
+    nullable: false
+    enum_values: [purpose, data_protection, duration, confidentiality_survival, permitted_recipients, return_destruction, ai_ml_restrictions, dispute_resolution, non_solicitation, governing_law, additional]
+    description: "Clause category for grouping and selection"
+
+  - name: description
+    type: text
+    nullable: true
+
+  - name: variants
+    type: json
+    nullable: false
+    description: "Clause variants as {A: {label, content}, B: {label, content}, ...}"
+
+  - name: default_variant
+    type: string
+    max_length: 10
+    nullable: false
+    default: "A"
+    description: "Default variant key"
+
+  - name: applicable_document_types
+    type: json
+    nullable: false
+    default: "[]"
+    description: "Document types this clause applies to, e.g. [\"mutual_nda\", \"one_way_nda\"]"
+
+  - name: sort_order
+    type: integer
+    nullable: false
+    default: 0
+    description: "Display ordering within category"
+
+  - name: is_required
+    type: boolean
+    nullable: false
+    default: true
+
+indexes:
+  - columns: [category]
+    name: idx_template_clause_category
+  - columns: [sort_order]
+    name: idx_template_clause_sort

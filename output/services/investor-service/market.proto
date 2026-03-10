@@ -1,0 +1,88 @@
+// Market Service - gRPC API
+// Market sector or industry focus category
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// Market Service
+// =============================================================================
+
+service MarketService {
+  // CRUD operations
+  rpc CreateMarket(CreateMarketRequest) returns (Market);
+  rpc GetMarket(GetMarketRequest) returns (Market);
+  rpc UpdateMarket(UpdateMarketRequest) returns (Market);
+  rpc DeleteMarket(DeleteMarketRequest) returns (DeleteMarketResponse);
+
+  // List operations
+  rpc ListMarkets(ListMarketsRequest) returns (ListMarketsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create Market
+message CreateMarketRequest {
+  string title = 1;  // Market/sector name
+  bool is_country = 2;  // Whether this is a country-based market category
+}
+
+// Get Market
+message GetMarketRequest {
+  string id = 1;  // UUID of the market
+}
+
+// Update Market
+message UpdateMarketRequest {
+  string id = 1;  // UUID of the market
+  optional string title = 2;  // Market/sector name
+  optional bool is_country = 3;  // Whether this is a country-based market category
+}
+
+// Delete Market
+message DeleteMarketRequest {
+  string id = 1;  // UUID of the market
+}
+
+message DeleteMarketResponse {
+  bool success = 1;
+}
+
+// List Markets
+message ListMarketsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListMarketsResponse {
+  repeated Market items = 1;  // List of markets
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message Market {
+  string id = 1;  // UUID primary key
+  string title = 2;  // Market/sector name
+  bool is_country = 3;  // Whether this is a country-based market category
+  string tenant_id = 4;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}

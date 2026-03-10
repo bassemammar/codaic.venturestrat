@@ -1,0 +1,56 @@
+# VentureStrat Platform Configuration
+# AI-powered investor discovery and outreach platform
+# Migrated from Node.js/Express + Next.js to Codaic/PlayformOS
+# Created by Codaic — The OS for Platforms
+
+platform_name: "venturestrat"
+platform_title: "VentureStrat"
+domain_service: "investor-service"
+domain_schema: "venturestrat"
+table_prefix: "vs_"
+description: "AI-powered investor discovery and outreach platform for startup fundraising"
+
+# Ports
+db_port: 15436
+service_port: 8059
+auth_port_ext: 8106
+frontend_port: 5178
+
+# JWT
+jwt_secret: "venturestrat-dev-secret-change-in-production"
+
+# Network
+network_name: "venturestrat-network"
+
+# Multi-service configuration
+services:
+  - name: investor-service
+    port: 8060
+    entities_dir: entities/investor/
+  - name: outreach-service
+    port: 8061
+    entities_dir: entities/outreach/
+    depends_on: [investor-service]
+  - name: crm-service
+    port: 8062
+    entities_dir: entities/crm/
+    depends_on: [investor-service]
+  - name: billing-service
+    port: 8063
+  - name: legal-service
+    port: 8064
+    entities_dir: entities/legal/
+    depends_on: [investor-service]
+
+# Portal
+portal:
+  name: venturestrat-portal
+  port: 5177
+
+# SDK packages
+sdk_packages:
+  - security
+  - audit
+
+# Observability
+observability_enabled: true

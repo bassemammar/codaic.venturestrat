@@ -1,0 +1,37 @@
+services:
+  registry-service:
+    build:
+      context: ../../
+      dockerfile: services/registry-service/Dockerfile
+      target: development
+    container_name: registry-service
+    hostname: venturestrat-registry-service
+    ports:
+      - "8080:8080"    # REST API
+      - "50051:50051"  # gRPC
+    environment:
+      # Consul
+      CONSUL_HOST: consul-server-1
+      CONSUL_PORT: 8500
+      # Kafka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC_LIFECYCLE: platform.services.lifecycle
+      # PostgreSQL - Updated to use shared infrastructure DB with schema
+      DATABASE_URL: postgresql://registry_user:reg_svc_d3v_p455@postgres:5432/venturestrat?options=-c search_path=registry,public
+      # Service
+      SERVICE_NAME: registry-service
+      SERVICE_VERSION: 0.1.0
+      LOG_LEVEL: DEBUG
+    volumes:
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+    networks:
+      venturestrat-network:
+        aliases:
+          - venturestrat-registry-service
+          - registry-service
+
+networks:
+  venturestrat-network:
+    external: true
+    name: oddo_mngr_venturestrat-network

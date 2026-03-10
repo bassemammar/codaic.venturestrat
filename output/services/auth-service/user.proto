@@ -1,0 +1,113 @@
+// User Service - gRPC API
+// System user with authentication credentials
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// User Service
+// =============================================================================
+
+service UserService {
+  // CRUD operations
+  rpc CreateUser(CreateUserRequest) returns (User);
+  rpc GetUser(GetUserRequest) returns (User);
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+  // List operations
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create User
+message CreateUserRequest {
+  string username = 1;  // Unique login username
+  string email = 2;  // User email address
+  string hashed_password = 3;  // Bcrypt hashed password
+  optional string first_name = 4;  // User first name
+  optional string last_name = 5;  // User last name
+  bool is_active = 6;  // Whether user account is active
+  optional google.protobuf.Timestamp last_login = 7;  // Timestamp of last successful login
+  int32 failed_login_count = 8;  // Number of consecutive failed login attempts
+  optional google.protobuf.Timestamp locked_until = 9;  // Account locked until this timestamp
+  optional string default_tenant_id = 10;  // Default tenant for this user
+}
+
+// Get User
+message GetUserRequest {
+  string id = 1;  // UUID of the user
+}
+
+// Update User
+message UpdateUserRequest {
+  string id = 1;  // UUID of the user
+  optional string username = 2;  // Unique login username
+  optional string email = 3;  // User email address
+  optional string hashed_password = 4;  // Bcrypt hashed password
+  optional string first_name = 5;  // User first name
+  optional string last_name = 6;  // User last name
+  optional bool is_active = 7;  // Whether user account is active
+  optional google.protobuf.Timestamp last_login = 8;  // Timestamp of last successful login
+  optional int32 failed_login_count = 9;  // Number of consecutive failed login attempts
+  optional google.protobuf.Timestamp locked_until = 10;  // Account locked until this timestamp
+  optional string default_tenant_id = 11;  // Default tenant for this user
+}
+
+// Delete User
+message DeleteUserRequest {
+  string id = 1;  // UUID of the user
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+// List Users
+message ListUsersRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListUsersResponse {
+  repeated User items = 1;  // List of users
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message User {
+  string id = 1;  // UUID primary key
+  string username = 2;  // Unique login username
+  string email = 3;  // User email address
+  string hashed_password = 4;  // Bcrypt hashed password
+  optional string first_name = 5;  // User first name
+  optional string last_name = 6;  // User last name
+  bool is_active = 7;  // Whether user account is active
+  optional google.protobuf.Timestamp last_login = 8;  // Timestamp of last successful login
+  int32 failed_login_count = 9;  // Number of consecutive failed login attempts
+  optional google.protobuf.Timestamp locked_until = 10;  // Account locked until this timestamp
+  optional string default_tenant_id = 11;  // Default tenant for this user
+  string tenant_id = 12;  // Owning tenant
+  string tenant_id = 13;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+}

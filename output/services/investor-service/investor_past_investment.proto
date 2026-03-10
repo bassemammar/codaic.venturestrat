@@ -1,0 +1,88 @@
+// InvestorPastInvestment Service - gRPC API
+// Many-to-many junction between investors and their past investments
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// InvestorPastInvestment Service
+// =============================================================================
+
+service InvestorPastInvestmentService {
+  // CRUD operations
+  rpc CreateInvestorPastInvestment(CreateInvestorPastInvestmentRequest) returns (InvestorPastInvestment);
+  rpc GetInvestorPastInvestment(GetInvestorPastInvestmentRequest) returns (InvestorPastInvestment);
+  rpc UpdateInvestorPastInvestment(UpdateInvestorPastInvestmentRequest) returns (InvestorPastInvestment);
+  rpc DeleteInvestorPastInvestment(DeleteInvestorPastInvestmentRequest) returns (DeleteInvestorPastInvestmentResponse);
+
+  // List operations
+  rpc ListInvestorPastInvestments(ListInvestorPastInvestmentsRequest) returns (ListInvestorPastInvestmentsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create InvestorPastInvestment
+message CreateInvestorPastInvestmentRequest {
+  string investor_id = 1;
+  string past_investment_id = 2;
+}
+
+// Get InvestorPastInvestment
+message GetInvestorPastInvestmentRequest {
+  string id = 1;  // UUID of the investorpastinvestment
+}
+
+// Update InvestorPastInvestment
+message UpdateInvestorPastInvestmentRequest {
+  string id = 1;  // UUID of the investorpastinvestment
+  optional string investor_id = 2;
+  optional string past_investment_id = 3;
+}
+
+// Delete InvestorPastInvestment
+message DeleteInvestorPastInvestmentRequest {
+  string id = 1;  // UUID of the investorpastinvestment
+}
+
+message DeleteInvestorPastInvestmentResponse {
+  bool success = 1;
+}
+
+// List InvestorPastInvestments
+message ListInvestorPastInvestmentsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListInvestorPastInvestmentsResponse {
+  repeated InvestorPastInvestment items = 1;  // List of investorpastinvestments
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message InvestorPastInvestment {
+  string id = 1;  // UUID primary key
+  string investor_id = 2;
+  string past_investment_id = 3;
+  string tenant_id = 4;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}

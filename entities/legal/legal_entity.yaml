@@ -1,0 +1,94 @@
+name: LegalEntity
+service_name: legal-service
+type: entity
+description: "Legal entity (company or organization) that acts as party in legal documents"
+table_name: vs_legal_entity
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: legal
+
+fields:
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Auth user who created this entity"
+
+  - name: legal_name
+    type: string
+    max_length: 200
+    nullable: false
+    description: "Registered legal name of the entity"
+
+  - name: jurisdiction
+    type: string
+    max_length: 30
+    nullable: false
+    enum_values: [england_wales, scotland, northern_ireland, delaware, california, new_york, difc, uae_mainland, ksa, egypt]
+    description: "Legal jurisdiction of incorporation"
+
+  - name: registration_number
+    type: string
+    max_length: 50
+    nullable: false
+    description: "Company registration or incorporation number"
+
+  - name: incorporation_date
+    type: date
+    nullable: true
+
+  - name: authorized_shares
+    type: integer
+    nullable: true
+    description: "Total authorized shares (null if unlimited or N/A)"
+
+  - name: par_value
+    type: decimal
+    precision: 12
+    scale: 4
+    nullable: true
+    description: "Par value per share"
+
+  - name: registered_address_id
+    type: uuid
+    nullable: true
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_legal_address
+    fk_column: id
+    description: "Registered office address"
+
+relationships:
+  - name: registered_address
+    type: many_to_one
+    target_entity: LegalAddress
+    foreign_key: registered_address_id
+
+  - name: equity_grants
+    type: one_to_many
+    target_entity: EquityGrant
+    foreign_key: legal_entity_id
+    cascade_delete: true
+
+  - name: persons
+    type: one_to_many
+    target_entity: ContactPerson
+    foreign_key: legal_entity_id
+
+  - name: investment_terms
+    type: one_to_many
+    target_entity: InvestmentTerm
+    foreign_key: legal_entity_id
+    cascade_delete: true
+
+indexes:
+  - columns: [user_id]
+    name: idx_legal_entity_user
+  - columns: [jurisdiction]
+    name: idx_legal_entity_jurisdiction
+  - columns: [jurisdiction, registration_number]
+    name: idx_legal_entity_reg_number
+    unique: true
+  - columns: [legal_name]
+    name: idx_legal_entity_name

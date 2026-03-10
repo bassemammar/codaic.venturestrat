@@ -1,0 +1,91 @@
+// InvestorEmail Service - gRPC API
+// Email addresses associated with an investor
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// InvestorEmail Service
+// =============================================================================
+
+service InvestorEmailService {
+  // CRUD operations
+  rpc CreateInvestorEmail(CreateInvestorEmailRequest) returns (InvestorEmail);
+  rpc GetInvestorEmail(GetInvestorEmailRequest) returns (InvestorEmail);
+  rpc UpdateInvestorEmail(UpdateInvestorEmailRequest) returns (InvestorEmail);
+  rpc DeleteInvestorEmail(DeleteInvestorEmailRequest) returns (DeleteInvestorEmailResponse);
+
+  // List operations
+  rpc ListInvestorEmails(ListInvestorEmailsRequest) returns (ListInvestorEmailsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create InvestorEmail
+message CreateInvestorEmailRequest {
+  string investor_id = 1;  // Reference to the investor
+  string email = 2;
+  string status = 3;  // Email validation status
+}
+
+// Get InvestorEmail
+message GetInvestorEmailRequest {
+  string id = 1;  // UUID of the investoremail
+}
+
+// Update InvestorEmail
+message UpdateInvestorEmailRequest {
+  string id = 1;  // UUID of the investoremail
+  optional string investor_id = 2;  // Reference to the investor
+  optional string email = 3;
+  optional string status = 4;  // Email validation status
+}
+
+// Delete InvestorEmail
+message DeleteInvestorEmailRequest {
+  string id = 1;  // UUID of the investoremail
+}
+
+message DeleteInvestorEmailResponse {
+  bool success = 1;
+}
+
+// List InvestorEmails
+message ListInvestorEmailsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListInvestorEmailsResponse {
+  repeated InvestorEmail items = 1;  // List of investoremails
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message InvestorEmail {
+  string id = 1;  // UUID primary key
+  string investor_id = 2;  // Reference to the investor
+  string email = 3;
+  string status = 4;  // Email validation status
+  string tenant_id = 5;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}

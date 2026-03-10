@@ -1,0 +1,74 @@
+name: Session
+domain: auth
+service_name: auth-service
+type: entity
+description: Active user session with token tracking
+table_name: aut_session
+schema_name: auth
+generate_id: true
+generate_timestamps: true
+fields:
+- name: user_id
+  type: uuid
+  nullable: false
+  is_foreign_key: true
+  fk_schema: auth
+  fk_table: aut_user
+  fk_column: id
+  indexed: true
+  description: User who owns this session
+
+- name: token_hash
+  type: string
+  max_length: 255
+  nullable: false
+  description: SHA256 hash of the access token
+
+- name: refresh_token_hash
+  type: string
+  max_length: 255
+  nullable: true
+  description: SHA256 hash of the refresh token
+
+- name: ip_address
+  type: string
+  max_length: 45
+  nullable: true
+  description: Client IP address
+
+- name: user_agent
+  type: string
+  max_length: 500
+  nullable: true
+  description: Client user agent string
+
+- name: is_active
+  type: boolean
+  nullable: false
+  default: true
+  description: Whether session is still active
+
+- name: expires_at
+  type: datetime
+  nullable: false
+  description: When this session expires
+
+- name: tenant_id
+  type: uuid
+  nullable: false
+  description: Tenant context for this session
+
+indexes:
+- name: idx_aut_session_token_hash
+  columns: [token_hash]
+- name: idx_aut_session_user_active
+  columns: [user_id, is_active]
+- name: idx_aut_session_expires
+  columns: [expires_at]
+
+relationships:
+- name: user
+  type: many_to_one
+  target_entity: User
+  foreign_key: user_id
+  description: Session owner

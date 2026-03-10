@@ -1,0 +1,29 @@
+name: Market
+service_name: investor-service
+type: entity
+description: "Market sector or industry focus category"
+table_name: vs_market
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: investor
+natural_key: title
+seed_strategy: file
+
+fields:
+  - name: title
+    type: string
+    max_length: 255
+    nullable: false
+    unique: true
+    description: "Market/sector name"
+
+  - name: is_country
+    type: boolean
+    nullable: false
+    default: false
+    description: "Whether this is a country-based market category"
+
+indexes:
+  - columns: [title]
+    name: idx_market_title

@@ -1,0 +1,109 @@
+// Plan Service - gRPC API
+// Subscription plan tier definition
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// Plan Service
+// =============================================================================
+
+service PlanService {
+  // CRUD operations
+  rpc CreatePlan(CreatePlanRequest) returns (Plan);
+  rpc GetPlan(GetPlanRequest) returns (Plan);
+  rpc UpdatePlan(UpdatePlanRequest) returns (Plan);
+  rpc DeletePlan(DeletePlanRequest) returns (DeletePlanResponse);
+
+  // List operations
+  rpc ListPlans(ListPlansRequest) returns (ListPlansResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create Plan
+message CreatePlanRequest {
+  string name = 1;
+  string code = 2;
+  double price_monthly = 3;
+  optional double price_quarterly = 4;
+  optional double price_annually = 5;
+  string limits = 6;  // Usage limits: {ai_drafts_per_day, emails_per_day, emails_per_month, investors_per_day, investors_per_month, follow_ups_per_month}
+  string features = 7;  // Feature flags: {show_full_contact_info, advanced_filters, priority_support, custom_integrations, can_download_csv}
+  string usage_basis = 8;  // Whether limits are enforced daily (free) or monthly (paid)
+  bool is_active = 9;
+}
+
+// Get Plan
+message GetPlanRequest {
+  string id = 1;  // UUID of the plan
+}
+
+// Update Plan
+message UpdatePlanRequest {
+  string id = 1;  // UUID of the plan
+  optional string name = 2;
+  optional string code = 3;
+  optional double price_monthly = 4;
+  optional double price_quarterly = 5;
+  optional double price_annually = 6;
+  optional string limits = 7;  // Usage limits: {ai_drafts_per_day, emails_per_day, emails_per_month, investors_per_day, investors_per_month, follow_ups_per_month}
+  optional string features = 8;  // Feature flags: {show_full_contact_info, advanced_filters, priority_support, custom_integrations, can_download_csv}
+  optional string usage_basis = 9;  // Whether limits are enforced daily (free) or monthly (paid)
+  optional bool is_active = 10;
+}
+
+// Delete Plan
+message DeletePlanRequest {
+  string id = 1;  // UUID of the plan
+}
+
+message DeletePlanResponse {
+  bool success = 1;
+}
+
+// List Plans
+message ListPlansRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListPlansResponse {
+  repeated Plan items = 1;  // List of plans
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message Plan {
+  string id = 1;  // UUID primary key
+  string name = 2;
+  string code = 3;
+  double price_monthly = 4;
+  optional double price_quarterly = 5;
+  optional double price_annually = 6;
+  string limits = 7;  // Usage limits: {ai_drafts_per_day, emails_per_day, emails_per_month, investors_per_day, investors_per_month, follow_ups_per_month}
+  string features = 8;  // Feature flags: {show_full_contact_info, advanced_filters, priority_support, custom_integrations, can_download_csv}
+  string usage_basis = 9;  // Whether limits are enforced daily (free) or monthly (paid)
+  bool is_active = 10;
+  string tenant_id = 11;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}

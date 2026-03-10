@@ -1,0 +1,126 @@
+manifest_version: 1
+name: crm-service
+version: 1.0.0
+description: VentureStrat crm-service
+depends:
+- outreach-service
+provides:
+  apis:
+    rest: /api/v1
+  events:
+  - topic: crm.shortlist.status_changed
+    description: Emitted when a shortlist entry changes status/stage
+    schema:
+      shortlist_id: uuid
+      user_id: uuid
+      investor_id: uuid
+      old_stage: string
+      new_stage: string
+  - topic: crm.activity.created
+    description: Emitted when a new activity is logged
+    schema:
+      activity_id: uuid
+      shortlist_id: uuid
+      activity_type: string
+  - topic: crm.activity.updated
+    schema: Activity.Updated
+  - topic: crm.activity.deleted
+    schema: Activity.Deleted
+  - topic: crm.pipeline_stage.created
+    schema: PipelineStage.Created
+  - topic: crm.pipeline_stage.updated
+    schema: PipelineStage.Updated
+  - topic: crm.pipeline_stage.deleted
+    schema: PipelineStage.Deleted
+  - topic: crm.shortlist.created
+    schema: Shortlist.Created
+  - topic: crm.shortlist.updated
+    schema: Shortlist.Updated
+  - topic: crm.shortlist.deleted
+    schema: Shortlist.Deleted
+  - topic: crm.shortlist_tag.created
+    schema: ShortlistTag.Created
+  - topic: crm.shortlist_tag.updated
+    schema: ShortlistTag.Updated
+  - topic: crm.shortlist_tag.deleted
+    schema: ShortlistTag.Deleted
+  - topic: crm.tag.created
+    schema: Tag.Created
+  - topic: crm.tag.updated
+    schema: Tag.Updated
+  - topic: crm.tag.deleted
+    schema: Tag.Deleted
+consumes:
+  events:
+  - topic: outreach.message.sent
+    handler: handle_message_sent
+    description: Creates an Activity when an email is sent to an investor
+    target_entity: Activity
+    action: create
+    field_mapping:
+      shortlist_id: data.shortlist_id
+      activity_type: email_sent
+      summary: data.subject
+  - topic: outreach.message.replied
+    handler: handle_message_replied
+    description: Updates shortlist status to INTERESTED when a reply is detected
+    target_entity: Shortlist
+    action: update
+health:
+  liveness: /health/live
+  readiness: /health/ready
+  interval: 10
+  timeout: 5
+  failure_threshold: 3
+  success_threshold: 1
+  deregister_after: 60
+resources:
+  cpu:
+    request: 100m
+    limit: 500m
+  memory:
+    request: 128Mi
+    limit: 512Mi
+tags:
+- fastapi
+- development
+metadata:
+  team: platform
+  service_type: fastapi
+  protocol: http
+observability:
+  tier: fast
+  metrics:
+    enabled: true
+    endpoint: /metrics
+    histogram_buckets:
+    - 0.005
+    - 0.01
+    - 0.025
+    - 0.05
+    - 0.1
+    - 0.25
+    - 0.5
+    slo:
+      p95_target_ms: 50
+      p99_target_ms: 100
+  logging:
+    enabled: true
+    level: INFO
+    structured: true
+    correlation_id: true
+  tracing:
+    enabled: true
+    sampling_rate: 1.0
+    otlp_endpoint: http://jaeger:4317
+  consul_tags:
+  - metrics
+testing:
+  markers:
+  - unit
+  - integration
+  coverage_threshold: 80
+  gates:
+  - lint
+  - typecheck
+  timeout: 300

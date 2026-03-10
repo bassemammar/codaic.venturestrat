@@ -1,0 +1,47 @@
+name: InvestorEmail
+service_name: investor-service
+type: entity
+description: "Email addresses associated with an investor"
+table_name: vs_investor_email
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: investor
+
+fields:
+  - name: investor_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_investor
+    fk_column: id
+    description: "Reference to the investor"
+
+  - name: email
+    type: string
+    max_length: 255
+    nullable: false
+
+  - name: status
+    type: string
+    max_length: 20
+    nullable: false
+    default: "valid"
+    enum_values: [valid, invalid, pending, unknown]
+    description: "Email validation status"
+
+relationships:
+  - name: investor
+    type: many_to_one
+    target_entity: Investor
+    foreign_key: investor_id
+    back_populates: emails
+
+indexes:
+  - columns: [investor_id]
+    name: idx_investor_email_investor
+  - columns: [email]
+    name: idx_investor_email_email
+  - columns: [status]
+    name: idx_investor_email_status

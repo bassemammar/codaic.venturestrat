@@ -1,0 +1,29 @@
+# Testing framework
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-xdist==3.5.0
+
+# HTTP client for testing
+httpx==0.26.0
+
+# Test containers for integration tests
+testcontainers==3.7.1
+
+# JWT testing
+PyJWT==2.8.0
+
+# YAML parsing
+PyYAML==6.0.1
+
+# Date parsing for tests
+python-dateutil==2.8.2
+
+# Mocking
+pytest-mock==3.12.0
+
+# FastAPI testing
+fastapi==0.109.0
+uvicorn==0.27.0
+
+# Test coverage
+pytest-cov==4.1.0

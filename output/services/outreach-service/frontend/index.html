@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1976d2" />
+    <meta name="description" content="Frontend for outreach" />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="outreach" />
+    <meta property="og:description" content="Frontend for outreach" />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="outreach" />
+    <meta name="twitter:description" content="Frontend for outreach" />
+
+    <!-- Preconnect hints for external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- Page Title -->
+    <title>outreach</title>
+
+    <!--
+      Material UI requires the Roboto font for proper rendering.
+      This loads the font asynchronously to prevent render blocking.
+    -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+    />
+
+    <!--
+      Material UI Icons font (optional, for Icon component with ligatures).
+      Remove if only using @mui/icons-material package.
+    -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+  </head>
+  <body>
+    <!--
+      Root element where React app mounts.
+      The id="root" must match the selector in main.tsx.
+    -->
+    <div id="root"></div>
+
+    <!--
+      Fallback content when JavaScript is disabled.
+      Modern SPAs require JavaScript, so we inform the user.
+    -->
+    <noscript>
+      <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+        <h1>JavaScript Required</h1>
+        <p>This application requires JavaScript to run. Please enable JavaScript in your browser settings.</p>
+      </div>
+    </noscript>
+
+    <!--
+      Main entry point for the application.
+      Vite handles this script tag during development and production builds.
+      The type="module" enables ES modules for modern JavaScript features.
+    -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

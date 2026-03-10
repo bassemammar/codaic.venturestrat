@@ -1,0 +1,45 @@
+name: InvestorPastInvestment
+service_name: investor-service
+type: entity
+description: "Many-to-many junction between investors and their past investments"
+table_name: vs_investor_past_investment
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: investor
+
+fields:
+  - name: investor_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_investor
+    fk_column: id
+
+  - name: past_investment_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_past_investment
+    fk_column: id
+
+relationships:
+  - name: investor
+    type: many_to_one
+    target_entity: Investor
+    foreign_key: investor_id
+
+  - name: past_investment
+    type: many_to_one
+    target_entity: PastInvestment
+    foreign_key: past_investment_id
+
+indexes:
+  - columns: [investor_id]
+    name: idx_inv_pi_investor
+  - columns: [past_investment_id]
+    name: idx_inv_pi_pi
+  - columns: [investor_id, past_investment_id]
+    name: idx_inv_pi_unique

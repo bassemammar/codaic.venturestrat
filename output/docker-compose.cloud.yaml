@@ -1,0 +1,264 @@
+# VentureStrat Cloud - shares Codaic infra (postgres, redis, kafka, consul)
+services:
+  registry-service:
+    build:
+      context: .
+      dockerfile: ./services/registry-service/Dockerfile
+      target: development
+    container_name: vs-registry-service
+    environment:
+      SERVICE_NAME: registry-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@codaic-postgres:5432/venturestrat"
+      CONSUL_HOST: codaic-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "codaic-kafka:29092"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      CORS_ORIGINS: "https://venturestrat.codaic.ai"
+    expose:
+      - "8080"
+    networks:
+      - codaic-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: ./services/auth-service/Dockerfile
+      target: development
+    container_name: vs-auth-service
+    environment:
+      SERVICE_NAME: auth-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@codaic-postgres:5432/venturestrat"
+      CONSUL_HOST: codaic-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "codaic-kafka:29092"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      JWT_ALGORITHM: "HS256"
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      JWT_REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      CORS_ORIGINS: "https://venturestrat.codaic.ai"
+    ports:
+      - "11106:8000"
+    networks:
+      - codaic-network
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  investor-service:
+    build:
+      context: .
+      dockerfile: ./services/investor-service/Dockerfile
+      target: development
+    container_name: vs-investor-service
+    environment:
+      SERVICE_NAME: investor-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8059"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@codaic-postgres:5432/venturestrat"
+      CONSUL_HOST: codaic-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "codaic-kafka:29092"
+      REDIS_URL: "redis://codaic-redis:6379/3"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      CORS_ORIGINS: "https://venturestrat.codaic.ai"
+      RATE_LIMIT_REQUESTS: "1000"
+      RATE_LIMIT_WINDOW: "60"
+    ports:
+      - "11059:8059"
+    networks:
+      - codaic-network
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8059/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  outreach-service:
+    build:
+      context: .
+      dockerfile: ./services/outreach-service/Dockerfile
+      target: development
+    container_name: vs-outreach-service
+    environment:
+      SERVICE_NAME: outreach-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8061"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@codaic-postgres:5432/venturestrat"
+      CONSUL_HOST: codaic-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "codaic-kafka:29092"
+      REDIS_URL: "redis://codaic-redis:6379/3"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      CORS_ORIGINS: "https://venturestrat.codaic.ai"
+    ports:
+      - "11061:8061"
+    networks:
+      - codaic-network
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8061/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  crm-service:
+    build:
+      context: .
+      dockerfile: ./services/crm-service/Dockerfile
+      target: development
+    container_name: vs-crm-service
+    environment:
+      SERVICE_NAME: crm-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8062"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@codaic-postgres:5432/venturestrat"
+      CONSUL_HOST: codaic-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "codaic-kafka:29092"
+      REDIS_URL: "redis://codaic-redis:6379/3"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      CORS_ORIGINS: "https://venturestrat.codaic.ai"
+    ports:
+      - "11062:8062"
+    networks:
+      - codaic-network
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8062/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  billing-service:
+    build:
+      context: .
+      dockerfile: ./services/billing-service/Dockerfile
+      target: development
+    container_name: vs-billing-service
+    environment:
+      SERVICE_NAME: billing-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8063"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@codaic-postgres:5432/venturestrat"
+      CONSUL_HOST: codaic-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "codaic-kafka:29092"
+      REDIS_URL: "redis://codaic-redis:6379/3"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      CORS_ORIGINS: "https://venturestrat.codaic.ai"
+    ports:
+      - "11063:8063"
+    networks:
+      - codaic-network
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8063/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  legal-service:
+    build:
+      context: .
+      dockerfile: ./services/legal-service/Dockerfile
+      target: development
+    container_name: vs-legal-service
+    environment:
+      SERVICE_NAME: legal-service
+      SERVICE_VERSION: "1.0.0"
+      HOST: "0.0.0.0"
+      PORT: "8064"
+      DATABASE_URL: "postgresql://venturestrat:venturestrat_dev_password@codaic-postgres:5432/venturestrat"
+      CONSUL_HOST: codaic-consul-server-1
+      CONSUL_PORT: "8500"
+      KAFKA_BOOTSTRAP_SERVERS: "codaic-kafka:29092"
+      REDIS_URL: "redis://codaic-redis:6379/3"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "console"
+      TRACING_ENABLED: "false"
+      PLATFORM_MODE: "standalone"
+      JWT_SECRET_KEY: "venturestrat-dev-secret-change-in-production"
+      CORS_ORIGINS: "https://venturestrat.codaic.ai"
+    ports:
+      - "11064:8064"
+    networks:
+      - codaic-network
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8064/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+networks:
+  codaic-network:
+    external: true
+    name: codaic_codaic-network

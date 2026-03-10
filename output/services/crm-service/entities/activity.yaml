@@ -1,0 +1,66 @@
+name: Activity
+service_name: crm-service
+type: entity
+description: "Outreach activity touchpoint on a shortlisted investor"
+table_name: vs_activity
+schema_name: venturestrat
+generate_id: true
+generate_timestamps: true
+domain: crm
+
+fields:
+  - name: shortlist_id
+    type: uuid
+    nullable: false
+    is_foreign_key: true
+    fk_schema: venturestrat
+    fk_table: vs_shortlist
+    fk_column: id
+    description: "Parent shortlist record"
+
+  - name: activity_type
+    type: string
+    max_length: 30
+    nullable: false
+    enum_values: [email_sent, email_received, note, call, meeting]
+
+  - name: summary
+    type: string
+    max_length: 500
+    nullable: true
+
+  - name: details
+    type: text
+    nullable: true
+
+  - name: date
+    type: datetime
+    nullable: false
+    description: "When the activity occurred"
+
+  - name: user_id
+    type: string
+    max_length: 100
+    nullable: false
+    description: "Auth user who performed the activity"
+
+  - name: reference_id
+    type: string
+    max_length: 100
+    nullable: true
+    description: "External reference, e.g. message ID"
+
+relationships:
+  - name: shortlist
+    type: many_to_one
+    target_entity: Shortlist
+    foreign_key: shortlist_id
+    back_populates: activities
+
+indexes:
+  - columns: [shortlist_id]
+    name: idx_activity_shortlist
+  - columns: [user_id]
+    name: idx_activity_user
+  - columns: [date]
+    name: idx_activity_date

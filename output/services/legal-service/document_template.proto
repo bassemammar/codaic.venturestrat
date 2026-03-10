@@ -1,0 +1,109 @@
+// DocumentTemplate Service - gRPC API
+// Legal document template definition — NDA, founders agreement, SAFE, employment, etc.
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// DocumentTemplate Service
+// =============================================================================
+
+service DocumentTemplateService {
+  // CRUD operations
+  rpc CreateDocumentTemplate(CreateDocumentTemplateRequest) returns (DocumentTemplate);
+  rpc GetDocumentTemplate(GetDocumentTemplateRequest) returns (DocumentTemplate);
+  rpc UpdateDocumentTemplate(UpdateDocumentTemplateRequest) returns (DocumentTemplate);
+  rpc DeleteDocumentTemplate(DeleteDocumentTemplateRequest) returns (DeleteDocumentTemplateResponse);
+
+  // List operations
+  rpc ListDocumentTemplates(ListDocumentTemplatesRequest) returns (ListDocumentTemplatesResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create DocumentTemplate
+message CreateDocumentTemplateRequest {
+  string name = 1;  // Template display name, e.g. Mutual NDA (England & Wales)
+  string document_type = 2;
+  string jurisdiction = 3;  // Which legal jurisdiction this template covers
+  string version = 4;  // Semantic version of the template
+  optional string description = 5;
+  string template_content = 6;  // Jinja2 template content for document generation
+  optional string configuration_schema = 7;  // JSON schema defining required configuration fields for this template
+  bool is_active = 8;
+  optional string clause_ids = 9;  // Ordered list of TemplateClause IDs used in this template
+}
+
+// Get DocumentTemplate
+message GetDocumentTemplateRequest {
+  string id = 1;  // UUID of the documenttemplate
+}
+
+// Update DocumentTemplate
+message UpdateDocumentTemplateRequest {
+  string id = 1;  // UUID of the documenttemplate
+  optional string name = 2;  // Template display name, e.g. Mutual NDA (England & Wales)
+  optional string document_type = 3;
+  optional string jurisdiction = 4;  // Which legal jurisdiction this template covers
+  optional string version = 5;  // Semantic version of the template
+  optional string description = 6;
+  optional string template_content = 7;  // Jinja2 template content for document generation
+  optional string configuration_schema = 8;  // JSON schema defining required configuration fields for this template
+  optional bool is_active = 9;
+  optional string clause_ids = 10;  // Ordered list of TemplateClause IDs used in this template
+}
+
+// Delete DocumentTemplate
+message DeleteDocumentTemplateRequest {
+  string id = 1;  // UUID of the documenttemplate
+}
+
+message DeleteDocumentTemplateResponse {
+  bool success = 1;
+}
+
+// List DocumentTemplates
+message ListDocumentTemplatesRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListDocumentTemplatesResponse {
+  repeated DocumentTemplate items = 1;  // List of documenttemplates
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message DocumentTemplate {
+  string id = 1;  // UUID primary key
+  string name = 2;  // Template display name, e.g. Mutual NDA (England & Wales)
+  string document_type = 3;
+  string jurisdiction = 4;  // Which legal jurisdiction this template covers
+  string version = 5;  // Semantic version of the template
+  optional string description = 6;
+  string template_content = 7;  // Jinja2 template content for document generation
+  optional string configuration_schema = 8;  // JSON schema defining required configuration fields for this template
+  bool is_active = 9;
+  optional string clause_ids = 10;  // Ordered list of TemplateClause IDs used in this template
+  string tenant_id = 11;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}

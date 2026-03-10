@@ -1,0 +1,6 @@
+# Invalid manifest - bad dependency format
+name: bad-deps-service
+version: 1.0.0
+depends:
+  - market-data-service  # Missing version constraint
+  - other-service@1.0  # Invalid semver constraint

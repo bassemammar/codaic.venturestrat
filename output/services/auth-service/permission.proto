@@ -1,0 +1,98 @@
+// Permission Service - gRPC API
+// Granular permission for resource access control
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// Permission Service
+// =============================================================================
+
+service PermissionService {
+  // CRUD operations
+  rpc CreatePermission(CreatePermissionRequest) returns (Permission);
+  rpc GetPermission(GetPermissionRequest) returns (Permission);
+  rpc UpdatePermission(UpdatePermissionRequest) returns (Permission);
+  rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse);
+
+  // List operations
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create Permission
+message CreatePermissionRequest {
+  string resource = 1;  // Resource name (e.g. trade, position, risk)
+  string action = 2;  // Action type (e.g. create, read, update, delete, approve)
+  string code = 3;  // Unique permission code (e.g. trade:create)
+  optional string description = 4;  // Human-readable permission description
+  optional string service_name = 5;  // Service this permission applies to
+}
+
+// Get Permission
+message GetPermissionRequest {
+  string id = 1;  // UUID of the permission
+}
+
+// Update Permission
+message UpdatePermissionRequest {
+  string id = 1;  // UUID of the permission
+  optional string resource = 2;  // Resource name (e.g. trade, position, risk)
+  optional string action = 3;  // Action type (e.g. create, read, update, delete, approve)
+  optional string code = 4;  // Unique permission code (e.g. trade:create)
+  optional string description = 5;  // Human-readable permission description
+  optional string service_name = 6;  // Service this permission applies to
+}
+
+// Delete Permission
+message DeletePermissionRequest {
+  string id = 1;  // UUID of the permission
+}
+
+message DeletePermissionResponse {
+  bool success = 1;
+}
+
+// List Permissions
+message ListPermissionsRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListPermissionsResponse {
+  repeated Permission items = 1;  // List of permissions
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message Permission {
+  string id = 1;  // UUID primary key
+  string resource = 2;  // Resource name (e.g. trade, position, risk)
+  string action = 3;  // Action type (e.g. create, read, update, delete, approve)
+  string code = 4;  // Unique permission code (e.g. trade:create)
+  optional string description = 5;  // Human-readable permission description
+  optional string service_name = 6;  // Service this permission applies to
+  string tenant_id = 7;  // Owning tenant
+  string tenant_id = 8;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}

@@ -1,0 +1,12 @@
+{
+  "id": "gbpusd_option_6m",
+  "instrument_type": "fx_option",
+  "currency_pair": "GBP/USD",
+  "option_type": "call",
+  "notional": 15000000,
+  "strike": 1.25,
+  "expiry": "2026-07-10",
+  "volatility": 0.12,
+  "model": "Garman-Kohlhagen",
+  "description": "6M GBP/USD FX option"
+}

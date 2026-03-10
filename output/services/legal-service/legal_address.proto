@@ -1,0 +1,103 @@
+// LegalAddress Service - gRPC API
+// Physical address for legal entities and persons with jurisdiction classification
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// LegalAddress Service
+// =============================================================================
+
+service LegalAddressService {
+  // CRUD operations
+  rpc CreateLegalAddress(CreateLegalAddressRequest) returns (LegalAddress);
+  rpc GetLegalAddress(GetLegalAddressRequest) returns (LegalAddress);
+  rpc UpdateLegalAddress(UpdateLegalAddressRequest) returns (LegalAddress);
+  rpc DeleteLegalAddress(DeleteLegalAddressRequest) returns (DeleteLegalAddressResponse);
+
+  // List operations
+  rpc ListLegalAddresss(ListLegalAddresssRequest) returns (ListLegalAddresssResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create LegalAddress
+message CreateLegalAddressRequest {
+  string address_line_1 = 1;
+  optional string address_line_2 = 2;
+  string city = 3;
+  optional string state_province = 4;
+  string postal_code = 5;
+  string country = 6;  // ISO 3166-1 alpha-2 country code
+  string jurisdiction = 7;
+}
+
+// Get LegalAddress
+message GetLegalAddressRequest {
+  string id = 1;  // UUID of the legaladdress
+}
+
+// Update LegalAddress
+message UpdateLegalAddressRequest {
+  string id = 1;  // UUID of the legaladdress
+  optional string address_line_1 = 2;
+  optional string address_line_2 = 3;
+  optional string city = 4;
+  optional string state_province = 5;
+  optional string postal_code = 6;
+  optional string country = 7;  // ISO 3166-1 alpha-2 country code
+  optional string jurisdiction = 8;
+}
+
+// Delete LegalAddress
+message DeleteLegalAddressRequest {
+  string id = 1;  // UUID of the legaladdress
+}
+
+message DeleteLegalAddressResponse {
+  bool success = 1;
+}
+
+// List LegalAddresss
+message ListLegalAddresssRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListLegalAddresssResponse {
+  repeated LegalAddress items = 1;  // List of legaladdresss
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message LegalAddress {
+  string id = 1;  // UUID primary key
+  string address_line_1 = 2;
+  optional string address_line_2 = 3;
+  string city = 4;
+  optional string state_province = 5;
+  string postal_code = 6;
+  string country = 7;  // ISO 3166-1 alpha-2 country code
+  string jurisdiction = 8;
+  string tenant_id = 9;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}

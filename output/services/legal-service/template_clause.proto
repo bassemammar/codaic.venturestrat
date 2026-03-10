@@ -1,0 +1,106 @@
+// TemplateClause Service - gRPC API
+// Clause library entry with conditional variants (A/B/C/D) for legal document generation
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// TemplateClause Service
+// =============================================================================
+
+service TemplateClauseService {
+  // CRUD operations
+  rpc CreateTemplateClause(CreateTemplateClauseRequest) returns (TemplateClause);
+  rpc GetTemplateClause(GetTemplateClauseRequest) returns (TemplateClause);
+  rpc UpdateTemplateClause(UpdateTemplateClauseRequest) returns (TemplateClause);
+  rpc DeleteTemplateClause(DeleteTemplateClauseRequest) returns (DeleteTemplateClauseResponse);
+
+  // List operations
+  rpc ListTemplateClauses(ListTemplateClausesRequest) returns (ListTemplateClausesResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create TemplateClause
+message CreateTemplateClauseRequest {
+  string name = 1;  // Clause name, e.g. Purpose, Duration, Data Protection
+  string category = 2;  // Clause category for grouping and selection
+  optional string description = 3;
+  string variants = 4;  // Clause variants as {A: {label, content}, B: {label, content}, ...}
+  string default_variant = 5;  // Default variant key
+  string applicable_document_types = 6;  // Document types this clause applies to, e.g. ["mutual_nda", "one_way_nda"]
+  int32 sort_order = 7;  // Display ordering within category
+  bool is_required = 8;
+}
+
+// Get TemplateClause
+message GetTemplateClauseRequest {
+  string id = 1;  // UUID of the templateclause
+}
+
+// Update TemplateClause
+message UpdateTemplateClauseRequest {
+  string id = 1;  // UUID of the templateclause
+  optional string name = 2;  // Clause name, e.g. Purpose, Duration, Data Protection
+  optional string category = 3;  // Clause category for grouping and selection
+  optional string description = 4;
+  optional string variants = 5;  // Clause variants as {A: {label, content}, B: {label, content}, ...}
+  optional string default_variant = 6;  // Default variant key
+  optional string applicable_document_types = 7;  // Document types this clause applies to, e.g. ["mutual_nda", "one_way_nda"]
+  optional int32 sort_order = 8;  // Display ordering within category
+  optional bool is_required = 9;
+}
+
+// Delete TemplateClause
+message DeleteTemplateClauseRequest {
+  string id = 1;  // UUID of the templateclause
+}
+
+message DeleteTemplateClauseResponse {
+  bool success = 1;
+}
+
+// List TemplateClauses
+message ListTemplateClausesRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListTemplateClausesResponse {
+  repeated TemplateClause items = 1;  // List of templateclauses
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message TemplateClause {
+  string id = 1;  // UUID primary key
+  string name = 2;  // Clause name, e.g. Purpose, Duration, Data Protection
+  string category = 3;  // Clause category for grouping and selection
+  optional string description = 4;
+  string variants = 5;  // Clause variants as {A: {label, content}, B: {label, content}, ...}
+  string default_variant = 6;  // Default variant key
+  string applicable_document_types = 7;  // Document types this clause applies to, e.g. ["mutual_nda", "one_way_nda"]
+  int32 sort_order = 8;  // Display ordering within category
+  bool is_required = 9;
+  string tenant_id = 10;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}

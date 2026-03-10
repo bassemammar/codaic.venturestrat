@@ -1,0 +1,103 @@
+manifest_version: 1
+name: investor-service
+version: 1.0.0
+description: VentureStrat investor-service
+depends: []
+provides:
+  apis:
+    rest: /api/v1
+  events:
+  - topic: investor.investor.created
+    schema: Investor.Created
+  - topic: investor.investor.updated
+    schema: Investor.Updated
+  - topic: investor.investor.deleted
+    schema: Investor.Deleted
+  - topic: investor.investor_email.created
+    schema: InvestorEmail.Created
+  - topic: investor.investor_email.updated
+    schema: InvestorEmail.Updated
+  - topic: investor.investor_email.deleted
+    schema: InvestorEmail.Deleted
+  - topic: investor.investor_market.created
+    schema: InvestorMarket.Created
+  - topic: investor.investor_market.updated
+    schema: InvestorMarket.Updated
+  - topic: investor.investor_market.deleted
+    schema: InvestorMarket.Deleted
+  - topic: investor.investor_past_investment.created
+    schema: InvestorPastInvestment.Created
+  - topic: investor.investor_past_investment.updated
+    schema: InvestorPastInvestment.Updated
+  - topic: investor.investor_past_investment.deleted
+    schema: InvestorPastInvestment.Deleted
+  - topic: investor.market.created
+    schema: Market.Created
+  - topic: investor.market.updated
+    schema: Market.Updated
+  - topic: investor.market.deleted
+    schema: Market.Deleted
+  - topic: investor.past_investment.created
+    schema: PastInvestment.Created
+  - topic: investor.past_investment.updated
+    schema: PastInvestment.Updated
+  - topic: investor.past_investment.deleted
+    schema: PastInvestment.Deleted
+health:
+  liveness: /health/live
+  readiness: /health/ready
+  interval: 10
+  timeout: 5
+  failure_threshold: 3
+  success_threshold: 1
+  deregister_after: 60
+resources:
+  cpu:
+    request: 100m
+    limit: 500m
+  memory:
+    request: 128Mi
+    limit: 512Mi
+tags:
+- fastapi
+- development
+metadata:
+  team: platform
+  service_type: fastapi
+  protocol: http
+observability:
+  tier: fast
+  metrics:
+    enabled: true
+    endpoint: /metrics
+    histogram_buckets:
+    - 0.005
+    - 0.01
+    - 0.025
+    - 0.05
+    - 0.1
+    - 0.25
+    - 0.5
+    slo:
+      p95_target_ms: 50
+      p99_target_ms: 100
+  logging:
+    enabled: true
+    level: INFO
+    structured: true
+    correlation_id: true
+  tracing:
+    enabled: true
+    sampling_rate: 1.0
+    otlp_endpoint: http://jaeger:4317
+  consul_tags:
+  - metrics
+testing:
+  markers:
+  - unit
+  - integration
+  coverage_threshold: 80
+  gates:
+  - lint
+  - typecheck
+  timeout: 300

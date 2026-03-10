@@ -1,0 +1,130 @@
+// Message Service - gRPC API
+// Email message — draft, scheduled, sent, or received reply
+
+syntax = "proto3";
+
+package venturestrat.default.v1;
+
+// Go package option
+option go_package = "github.com/venturestrat/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// Message Service
+// =============================================================================
+
+service MessageService {
+  // CRUD operations
+  rpc CreateMessage(CreateMessageRequest) returns (Message);
+  rpc GetMessage(GetMessageRequest) returns (Message);
+  rpc UpdateMessage(UpdateMessageRequest) returns (Message);
+  rpc DeleteMessage(DeleteMessageRequest) returns (DeleteMessageResponse);
+
+  // List operations
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create Message
+message CreateMessageRequest {
+  string user_id = 1;
+  optional string investor_id = 2;  // Cross-service reference to investor-service Investor
+  optional string email_account_id = 3;
+  string status = 4;
+  string to_addresses = 5;  // Recipient email addresses array
+  string cc_addresses = 6;
+  string subject = 7;
+  string from_address = 8;
+  string body = 9;  // HTML email body
+  string attachments = 10;  // Array of {key, name, size, type} for S3 attachments
+  optional string thread_id = 11;  // Gmail thread ID for conversation threading
+  optional string provider_message_id = 12;  // Message-ID header from email provider
+  optional string provider_references = 13;  // References header for email threading
+  optional string previous_message_id = 14;  // Self-referential FK for reply threading
+  optional google.protobuf.Timestamp scheduled_for = 15;  // When to send if scheduled
+  optional string job_id = 16;  // Kafka event reference for scheduled sends
+}
+
+// Get Message
+message GetMessageRequest {
+  string id = 1;  // UUID of the message
+}
+
+// Update Message
+message UpdateMessageRequest {
+  string id = 1;  // UUID of the message
+  optional string user_id = 2;
+  optional string investor_id = 3;  // Cross-service reference to investor-service Investor
+  optional string email_account_id = 4;
+  optional string status = 5;
+  optional string to_addresses = 6;  // Recipient email addresses array
+  optional string cc_addresses = 7;
+  optional string subject = 8;
+  optional string from_address = 9;
+  optional string body = 10;  // HTML email body
+  optional string attachments = 11;  // Array of {key, name, size, type} for S3 attachments
+  optional string thread_id = 12;  // Gmail thread ID for conversation threading
+  optional string provider_message_id = 13;  // Message-ID header from email provider
+  optional string provider_references = 14;  // References header for email threading
+  optional string previous_message_id = 15;  // Self-referential FK for reply threading
+  optional google.protobuf.Timestamp scheduled_for = 16;  // When to send if scheduled
+  optional string job_id = 17;  // Kafka event reference for scheduled sends
+}
+
+// Delete Message
+message DeleteMessageRequest {
+  string id = 1;  // UUID of the message
+}
+
+message DeleteMessageResponse {
+  bool success = 1;
+}
+
+// List Messages
+message ListMessagesRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListMessagesResponse {
+  repeated Message items = 1;  // List of messages
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message Message {
+  string id = 1;  // UUID primary key
+  string user_id = 2;
+  optional string investor_id = 3;  // Cross-service reference to investor-service Investor
+  optional string email_account_id = 4;
+  string status = 5;
+  string to_addresses = 6;  // Recipient email addresses array
+  string cc_addresses = 7;
+  string subject = 8;
+  string from_address = 9;
+  string body = 10;  // HTML email body
+  string attachments = 11;  // Array of {key, name, size, type} for S3 attachments
+  optional string thread_id = 12;  // Gmail thread ID for conversation threading
+  optional string provider_message_id = 13;  // Message-ID header from email provider
+  optional string provider_references = 14;  // References header for email threading
+  optional string previous_message_id = 15;  // Self-referential FK for reply threading
+  optional google.protobuf.Timestamp scheduled_for = 16;  // When to send if scheduled
+  optional string job_id = 17;  // Kafka event reference for scheduled sends
+  string tenant_id = 18;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 19;
+  google.protobuf.Timestamp updated_at = 20;
+}

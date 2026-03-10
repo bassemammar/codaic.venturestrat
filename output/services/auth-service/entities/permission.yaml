@@ -1,0 +1,50 @@
+name: Permission
+domain: auth
+service_name: auth-service
+type: entity
+description: Granular permission for resource access control
+table_name: aut_permission
+schema_name: auth
+generate_id: true
+generate_timestamps: true
+fields:
+- name: resource
+  type: string
+  max_length: 100
+  nullable: false
+  description: Resource name (e.g. trade, position, risk)
+
+- name: action
+  type: string
+  max_length: 50
+  nullable: false
+  description: Action type (e.g. create, read, update, delete, approve)
+
+- name: code
+  type: string
+  max_length: 100
+  nullable: false
+  unique: true
+  indexed: true
+  description: 'Unique permission code (e.g. trade:create)'
+
+- name: description
+  type: text
+  nullable: true
+  description: Human-readable permission description
+
+- name: service_name
+  type: string
+  max_length: 100
+  nullable: true
+  description: Service this permission applies to
+
+- name: tenant_id
+  type: uuid
+  nullable: false
+  description: Owning tenant
+
+indexes:
+- name: idx_aut_permission_resource_action
+  columns: [resource, action, tenant_id]
+  unique: true

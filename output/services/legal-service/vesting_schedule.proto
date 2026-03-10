@@ -1,0 +1,97 @@
+// VestingSchedule Service - gRPC API
+// Vesting schedule for equity grants — cliff period, total period, and acceleration triggers
+
+syntax = "proto3";
+
+package codaic.default.v1;
+
+// Go package option
+option go_package = "github.com/codaic/default/pkg/api/v1";
+
+// Python generic services disabled
+option py_generic_services = false;
+
+// Common imports
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// =============================================================================
+// VestingSchedule Service
+// =============================================================================
+
+service VestingScheduleService {
+  // CRUD operations
+  rpc CreateVestingSchedule(CreateVestingScheduleRequest) returns (VestingSchedule);
+  rpc GetVestingSchedule(GetVestingScheduleRequest) returns (VestingSchedule);
+  rpc UpdateVestingSchedule(UpdateVestingScheduleRequest) returns (VestingSchedule);
+  rpc DeleteVestingSchedule(DeleteVestingScheduleRequest) returns (DeleteVestingScheduleResponse);
+
+  // List operations
+  rpc ListVestingSchedules(ListVestingSchedulesRequest) returns (ListVestingSchedulesResponse);
+}
+
+// =============================================================================
+// Request/Response Messages
+// =============================================================================
+
+// Create VestingSchedule
+message CreateVestingScheduleRequest {
+  string equity_grant_id = 1;
+  int32 total_period_months = 2;  // Total vesting period in months (12-60, typically 48 for 4-year vest)
+  int32 cliff_months = 3;  // Cliff period in months (0-24, typically 12 for 1-year cliff)
+  string start_date = 4;
+  string acceleration_trigger = 5;  // Acceleration event type on change of control
+}
+
+// Get VestingSchedule
+message GetVestingScheduleRequest {
+  string id = 1;  // UUID of the vestingschedule
+}
+
+// Update VestingSchedule
+message UpdateVestingScheduleRequest {
+  string id = 1;  // UUID of the vestingschedule
+  optional string equity_grant_id = 2;
+  optional int32 total_period_months = 3;  // Total vesting period in months (12-60, typically 48 for 4-year vest)
+  optional int32 cliff_months = 4;  // Cliff period in months (0-24, typically 12 for 1-year cliff)
+  optional string start_date = 5;
+  optional string acceleration_trigger = 6;  // Acceleration event type on change of control
+}
+
+// Delete VestingSchedule
+message DeleteVestingScheduleRequest {
+  string id = 1;  // UUID of the vestingschedule
+}
+
+message DeleteVestingScheduleResponse {
+  bool success = 1;
+}
+
+// List VestingSchedules
+message ListVestingSchedulesRequest {
+  int32 page_size = 1;  // Results per page (default: 50, max: 100)
+  string page_token = 2;  // Pagination token
+  optional string search = 3;  // Search filter
+}
+
+message ListVestingSchedulesResponse {
+  repeated VestingSchedule items = 1;  // List of vestingschedules
+  string next_page_token = 2;  // Next page token
+  int32 total_count = 3;  // Total count (if available)
+}
+
+// =============================================================================
+// Data Models
+// =============================================================================
+
+message VestingSchedule {
+  string id = 1;  // UUID primary key
+  string equity_grant_id = 2;
+  int32 total_period_months = 3;  // Total vesting period in months (12-60, typically 48 for 4-year vest)
+  int32 cliff_months = 4;  // Cliff period in months (0-24, typically 12 for 1-year cliff)
+  string start_date = 5;
+  string acceleration_trigger = 6;  // Acceleration event type on change of control
+  string tenant_id = 7;  // Tenant identifier
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
